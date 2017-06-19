@@ -70,7 +70,7 @@ public class SimpleExample {
   }
 
 }
-<!--more-->
+
 public class HelloJob implements Job {
 
     private static Logger _log = LoggerFactory.getLogger(HelloJob.class);
@@ -93,6 +93,8 @@ public class HelloJob implements Job {
  * TriggerBuilder - 建造者模式创建 Trigger 实例.
  * QuartzSchedulerThread 继承Thread 主要的执行任务线程
  
+<!--more-->
+
 从上面的几个接口，可以看到quartz设计非常精妙，将作业和触发器分开设计，同时调度器完成对作业的调度。
 了解了几个关键类和接口作用，下面我们来分析整个执行过程。
 ### 1.3 执行过程分析
