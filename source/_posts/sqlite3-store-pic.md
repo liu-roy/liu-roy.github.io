@@ -17,6 +17,7 @@ sqlite3支持对二进制数据的缓存，在实际的编程开发当中我们�
 >  BLOB. The value is a blob of data, stored exactly as it was input。 
 
 即数据不做任何转换，以输入形式存储。因此 BOLB通常用来存储二进制大对象。
+<!--more-->
 
 ## sqlite3\_bind\_blob示例代码 
 
@@ -42,7 +43,6 @@ sqlite3_prepare(db,sql,strlen(sql),&stmt,0);                   //完成对sql语
     sqlite3_bind_blob(stmt,1,pPicData, strlen(pPicData), NULL);//1代表第一个？
     sqlite3_step(stmt);                                        //将数据写入数据库中
 } 
-<!--more-->
 sqlite3_prepare(db, "select * from SqliteBlobTest", -1, &stmt, 0);
 int result = sqlite3_step(stmt);
 int id = 0,len = 0; 

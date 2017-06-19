@@ -13,6 +13,7 @@ tags: [排序]
 >* 冒泡排序,快速排序
 >* 简单选择排序,堆排序
 
+<!--more-->
 ```c++
 #include <stdio.h>
 #include<stdlib.h>
