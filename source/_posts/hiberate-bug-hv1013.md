@@ -32,6 +32,7 @@ public class ApplicationCategory implements Serializable {
    //省略其他方法
 }
 ```
+<!--more-->
 程序启动，保存applicationCategory时，抛异常，错误如下：
 ```java
 2017-05-23 18:51:43.195 ERROR 16876 --- [http-nio-65009-exec-4] o.a.c.c.C.[.[.[/].[dispatcherServlet]    : Servlet.service() for servlet [dispatcherServlet] in context with path [] threw exception [Request processing failed; nested exception is javax.validation.ValidationException: HV000041: Call to TraversableResolver.isReachable() threw an exception.] with root cause

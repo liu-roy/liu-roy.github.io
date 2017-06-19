@@ -19,6 +19,7 @@ yum clean all
 ## 3.配置 shadowsocks
 安装完成后，需要创建配置文件/etc/shadowsocks/shadowsocks.json
 vi /etc/shadowsocks/shadowsocks.json
+<!--more-->
 输入以下内容
 ```shell
 {

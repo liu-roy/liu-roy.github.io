@@ -42,7 +42,7 @@ sqlite3_prepare(db,sql,strlen(sql),&stmt,0);                   //完成对sql语
     sqlite3_bind_blob(stmt,1,pPicData, strlen(pPicData), NULL);//1代表第一个？
     sqlite3_step(stmt);                                        //将数据写入数据库中
 } 
-
+<!--more-->
 sqlite3_prepare(db, "select * from SqliteBlobTest", -1, &stmt, 0);
 int result = sqlite3_step(stmt);
 int id = 0,len = 0; 

@@ -32,6 +32,7 @@ public interface MailServiceProvider{
     MailService getMailSerice();
 }
 ```
+<!--more-->
 ```java
 /**
  * 电子邮件服务提供者，实现MailServiceProvider，并提供自己的运输邮件方法

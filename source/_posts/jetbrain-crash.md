@@ -20,7 +20,7 @@ mv IntelliJIDEALicenseServer_linux_amd64 /home/IntellijIdea/IdeaServer
 chmod +x IdeaServer  
 screen -dmS IdeaServer ./IdeaServer -l xx.xx.xx.xx -p 1024 -prolongationPeriod 999999999999
 ```
-
+<!--more-->
 ## 3.为防火墙添加端口
 ```shell
 firewall-cmd --add-port=1024/tcp --permanent

@@ -51,6 +51,7 @@ public class WebSocketConfig implements WebSocketConfigurer{
 
 }
 ```
+<!--more-->
 这样一个websocket 服务端就写好了
 
 我们希望能够把websocketSession和httpsession对应起来，这样就能根据当前不同的session，定向对websocketSession进行数据返回

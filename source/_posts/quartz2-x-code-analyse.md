@@ -70,7 +70,7 @@ public class SimpleExample {
   }
 
 }
-
+<!--more-->
 public class HelloJob implements Job {
 
     private static Logger _log = LoggerFactory.getLogger(HelloJob.class);

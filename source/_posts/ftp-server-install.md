@@ -12,7 +12,7 @@ tags: [ftp, filezilla]
 ![](http://images2015.cnblogs.com/blog/981342/201701/981342-20170107000522331-1112693055.png)
 ## 2软件安装
 ![](http://images2015.cnblogs.com/blog/981342/201701/981342-20170107000602362-1688425050.png)
-
+<!--more-->
 ![](http://images2015.cnblogs.com/blog/981342/201701/981342-20170107000612737-930776481.png)
 
 ![](http://images2015.cnblogs.com/blog/981342/201701/981342-20170107000619769-592217204.png)
