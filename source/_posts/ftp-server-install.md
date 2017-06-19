@@ -10,9 +10,10 @@ tags: [ftp, filezilla]
 ## 1软件获取
 从百度搜索 FileZilla Server，下载即可，此软件分为客户端和服务端，注意区分
 ![](http://images2015.cnblogs.com/blog/981342/201701/981342-20170107000522331-1112693055.png)
+<!--more-->
 ## 2软件安装
 ![](http://images2015.cnblogs.com/blog/981342/201701/981342-20170107000602362-1688425050.png)
-<!--more-->
+
 ![](http://images2015.cnblogs.com/blog/981342/201701/981342-20170107000612737-930776481.png)
 
 ![](http://images2015.cnblogs.com/blog/981342/201701/981342-20170107000619769-592217204.png)
