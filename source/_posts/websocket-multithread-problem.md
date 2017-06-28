@@ -15,8 +15,8 @@ tags: [websocket]
 <!--more-->
 ## 排查解决过程
 从图中可以看出，远端处于【TEXT_PARTIAL_WRITING】状态，就这这个关键字google（不得不说就英文搜索而言，google强太多），
-最后发现，tomcat的websocket没有相关的多线程处理，有人在apache上提bug，，可以看一下开发者给的回复：
-![tomcat8 websocker bug](https://bz.apache.org/bugzilla/show_bug.cgi?id=56026)
+最后发现，tomcat的websocket没有相关的多线程处理，有人在apache上提bug，可以看一下开发者给的回复：
+[tomcat8 websocker bug](https://bz.apache.org/bugzilla/show_bug.cgi?id=56026)
 
 ```shell
 I have some sympathy with this view. Given that the Javadoc for RemoteEndpoint.Basic explicitly states that  
