@@ -9,42 +9,44 @@ tags: [ftp, filezilla]
 ------------
 ## 1软件获取
 从百度搜索 FileZilla Server，下载即可，此软件分为客户端和服务端，注意区分
-![](http://images2015.cnblogs.com/blog/981342/201701/981342-20170107000522331-1112693055.png)
+![](http://img.blog.csdn.net/20170702181748203)
+
 <!--more-->
 ## 2软件安装
-![](http://images2015.cnblogs.com/blog/981342/201701/981342-20170107000602362-1688425050.png)
+![](http://img.blog.csdn.net/20170702181905139)
 
-![](http://images2015.cnblogs.com/blog/981342/201701/981342-20170107000612737-930776481.png)
+![](http://img.blog.csdn.net/20170702181943044)
 
-![](http://images2015.cnblogs.com/blog/981342/201701/981342-20170107000619769-592217204.png)
+![](http://img.blog.csdn.net/20170702183223757)
 
-![](http://images2015.cnblogs.com/blog/981342/201701/981342-20170107000627456-564257573.png)
+![](http://img.blog.csdn.net/20170702182156989)
 
-![](http://images2015.cnblogs.com/blog/981342/201701/981342-20170107000637956-1624005122.png)
+![](http://img.blog.csdn.net/20170702182232158)
 
 点击install完成安装
 
 填写server address，也可以不写，密码无需设置，点击ok
-![](http://images2015.cnblogs.com/blog/981342/201701/981342-20170107000808894-1255648819.png)
-![](http://images2015.cnblogs.com/blog/981342/201701/981342-20170107000837597-250598469.png)
+
+![](http://img.blog.csdn.net/20170702182333053)
+![](http://img.blog.csdn.net/20170702182411991)
 
 当出现如上图所示的loggedon 表示ftp服务器已经开启
 
 ## 3软件配置
 ### 添加用户
 点击edit->users->general->add 填写用户名，添加一个用户，供第三方软件登录，然后点击enable account 设置密码，除用户名外，与下图保持一致即可，点击ok
-![](http://images2015.cnblogs.com/blog/981342/201701/981342-20170107000943534-456119170.png)
+![](http://img.blog.csdn.net/20170702182441225)
 ### 创建共享文件夹
 点击shared floders ,为用户添加一个共享文件夹，用于传数据，如下图所示，F:\FtpTest为此用户的根目录，此目录下的所有文件和文件夹对此用户可见。文件和文件夹的权限可以自行配置，或者按照图中的对号进行勾选，点击ok
-![](http://images2015.cnblogs.com/blog/981342/201701/981342-20170107001044253-1657769955.png)
+![](http://img.blog.csdn.net/20170702182505178)
 ### 设置上传和下载速度。
-![](http://images2015.cnblogs.com/blog/981342/201701/981342-20170107001150566-1907069429.png)
+![](http://img.blog.csdn.net/20170702182535111)
 ### 设置超时时间
 有三个超时时间，其他两个不加赘述，注意TimeOut settings，中间的no transfertimeout如果不为0，则表示一段时间不传输数据就会自动下线。可以理解为会话的保活时间
-![](http://images2015.cnblogs.com/blog/981342/201701/981342-20170107001230347-225428369.png)
+![](http://img.blog.csdn.net/20170702182604387)
 ### 设置日志信息（可省略）
 主要用于其他用户的操作记录和问题查看
-![](http://images2015.cnblogs.com/blog/981342/201701/981342-20170107001606800-559715477.png)
+![](http://img.blog.csdn.net/20170702182634406)
 
 ## 从客户端登录查看文件
-![](http://images2015.cnblogs.com/blog/981342/201701/981342-20170107002617956-1595466117.png)
+![](http://img.blog.csdn.net/20170702182752511)
