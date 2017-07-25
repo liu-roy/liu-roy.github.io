@@ -202,7 +202,7 @@ public class NutritionFacts {
 - 构造器私有 public static final Elvis INSTANCE = new Elvis(); 可以通过反射调用私有构造器，为了抵御这种攻击，第二次创建该实例的时候抛出异常
 - 构造器私有 private static final Elvis INSTANCE = new Elvis()； public static Elvis getInstance() {return INSTANCE;}
 - 枚举单例 
-  ```java
+	```java
 	public enum Elvis {
 		INSTANCE;
 		public void leaveTheBuilding() {
