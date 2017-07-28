@@ -15,13 +15,14 @@ Hibernate定义并支持下列对象状态(state):
 
 ### 持久状态(Persistent)  
 持久(Persistent)的实例在数据库中有对应的记录，并拥有一个持久化标识(identifier)。 持久(Persistent)的实例可能是刚被保存的，或刚被加载的，无论哪一种，按定义，它存在于相关联的Session作用范围内。 Hibernate会检测到处于持久(Persistent)状态的对象的任何改动，在当前操作单元执行完毕时将对象数据与数据库同步。 开发者不需要手动执行UPDATE。将对象从持久(Persistent)状态变成临时(Transient)状态同样也不需要手动执行DELETE语句。
-<!--more-->
 ### 游离状态(Detached)  
 当Session进行了Close、Clear或者evict后, 持久化对象虽然拥有持久化标识符和与数据库对应记录一致的值, 但是因为会话已经消失, 对象不在持久化管理之内, 所以处于游离. 游离状态的对象与临时状态对象是十分相似的, 只是它还含有持久化标识.游离状态(Detached)对象如果重新关联到某个新的Session上， 会再次转变为持久(Persistent)的 。
 
 具体可以看下图（图片来自网络） 
 
 ![这里写图片描述](http://img.blog.csdn.net/20170717145602656)
+
+<!--more-->
 
 ## 代码演示
 为了演示三种状态的区别，做几个小例子
