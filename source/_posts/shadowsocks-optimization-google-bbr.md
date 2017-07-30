@@ -5,31 +5,35 @@ categories: 实用工具
 tags: [shadowsocks, 翻墙]
 ---
 转自[https://www.vultr.com/docs/how-to-deploy-google-bbr-on-centos-7](https://www.vultr.com/docs/how-to-deploy-google-bbr-on-centos-7)  
-翻译 rou liu
+翻译by rou liu
 
 上一篇介绍完了部署shadowsocks 大多数情况下已经满足需求，但是如果想看youtube高清视频
 或者在线直播，那就要用到接下来的方法，感谢goolgle。
 
-## 1.什么是bbr 
+## 什么是bbr 
 BBR（Bottleneck Bandwidth and RTT）是一个新的拥塞控制算法，由谷歌贡献的Linux内核的TCP协议栈。有了BBR，Linux服务器可以得到显著提高连接的吞吐量和减少延迟。此外，它很容易部署，因为这种算法只需要在发送方更新，而不需要在网络或在接收端部署BBR。
 
 在本文中，我将向你展示如何在Vultr CentOS的7 KVM服务器实例上部署BBR。
 
-## 2.前提条件
+## 前提条件
 - 一个Vultr CentOS的7 x64的服务器实例。
 - 一个sudo的用户。
 
-## 3.升级bbr
-### 3.1 使用ELRepo RPM库升级内核
+## 升级bbr
+### 使用ELRepo RPM库升级内核
 
 为了使用BBR，你需要将你的CentOS 7机器的内核升级到4.9.0。你可以很容易得通过ELRepo RPM库中进行升级。  
-在升级之前，你可以看看当前的linux内核版本：  
+在升级之前，你可以看看当前的linux内核版本： 
+  
 ```shell
 uname -r
 ```  
 
-这个命令会输出类似的一个字符串：  
-3.10.0-514.2.2.el7.x86_64  
+这个命令会输出类似的一个字符串：
+```shell  
+3.10.0-514.2.2.el7.x86_64
+``` 
+  
 正如你看到的，目前linux的内核版本是3.10.0。
 
 安装ELRepo repo：  
@@ -69,7 +73,8 @@ CentOS Linux (3.10.0-514.2.2.el7.x86_64) 7 (Core)
 CentOS Linux (3.10.0-514.el7.x86_64) 7 (Core)
 CentOS Linux (0-rescue-bf94f46c6bd04792a6a42c91bae645f7) 7 (Core)
 ``` 
-<!--more-->
+<!--more--> 
+
 从0开始计数，4.9.0内核位于第二行，所以设置默认启动项为1：  
 ```shell
 sudo grub2-set-default 1
@@ -92,7 +97,7 @@ uname -r
 4.9.0-1.el7.elrepo.x86_64
 ```
 
-### 3.2：启用BBR
+### 启用BBR
 
 为了使BBR算法，你需要修改sysctl配置： 
 ```shell
@@ -136,7 +141,7 @@ lsmod | grep bbr
 tcp_bbr                16384  0
 ``` 
 
-## 4.（可选）：测试网络性能增强
+## (可选)：测试网络性能增强
 
 为了测试BBR的网络性能的提升，你可以在Web服务器目录中的创建一个文件下载，然后从你的台式机上的浏览器测试下载速度。
 ```shell
