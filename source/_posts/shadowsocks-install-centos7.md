@@ -3,6 +3,7 @@ title: shadowsocks之在centos7上安装
 date: 2017-06-03 09:38:40
 categories: 实用工具
 tags: [shadowsocks, 翻墙]
+---
 ## 1. 前提条件
 - 一台境外centos7服务器。（推荐国外云服务器Vultr/DigitalOcean/Linode/ Bandwagon，原因不详）
 ## 2. shadowsock简介
