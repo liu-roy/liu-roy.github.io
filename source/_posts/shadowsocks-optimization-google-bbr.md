@@ -22,77 +22,62 @@ BBR（Bottleneck Bandwidth and RTT）是一个新的拥塞控制算法，由谷�
 ## 升级bbr
 ### 使用ELRepo RPM库升级内核
 
-为了使用BBR，你需要将你的CentOS 7机器的内核升级到4.9.0。你可以很容易得通过ELRepo RPM库中进行升级。  
-在升级之前，你可以看看当前的linux内核版本:  
-```bash
-uname -r
-```  
-
-这个命令会输出类似的一个字符串:   
-```bash
-3.10.0-514.2.2.el7.x86_64
-``` 
+为了使用BBR，你需要将你的CentOS 7机器的内核升级到4.9.0。你可以很容易得通过ELRepo RPM库中进行升级。 
   
+在升级之前，你可以看看当前的linux内核版本: 
+
+uname -r  
+
+这个命令会输出类似的一个字符串:  
+
+3.10.0-514.2.2.el7.x86_64
+ 
+
 正如你看到的，目前linux的内核版本是3.10.0。
 
-安装ELRepo repo：  
-```bash
-sudo rpm --import https://www.elrepo.org/RPM-GPG-KEY-elrepo.org
-sudo rpm -Uvh http://www.elrepo.org/elrepo-release-7.0-2.el7.elrepo.noarch.rpm 
-```
+安装ELRepo repo:  
+
+sudo rpm --import https://www.elrepo.org/RPM-GPG-KEY-elrepo.org  
+sudo rpm -Uvh http://www.elrepo.org/elrepo-release-7.0-2.el7.elrepo.noarch.rpm
 
 使用ELRepo安装4.9.0内核：  
-```bash
-sudo yum --enablerepo=elrepo-kernel install kernel-ml -y
-```  
+sudo yum --enablerepo=elrepo-kernel install kernel-ml -y   
+ 
 确认结果：  
-```bash
 rpm -qa | grep kernel  
-```  
-如果安装成功，你应该可以看到kernel-ml-4.9.0-1.el7.elrepo.x86_64在如下输出列表中：  
-```bash
-kernel-ml-4.9.0-1.el7.elrepo.x86_64
-kernel-3.10.0-514.el7.x86_64
-kernel-tools-libs-3.10.0-514.2.2.el7.x86_64
-kernel-tools-3.10.0-514.2.2.el7.x86_64
+
+如果安装成功，你应该可以看到kernel-ml-4.9.0-1.el7.elrepo.x86_64在如下输出列表中：   
+kernel-ml-4.9.0-1.el7.elrepo.x86_64  
+kernel-3.10.0-514.el7.x86_64  
+kernel-tools-libs-3.10.0-514.2.2.el7.x86_64  
+kernel-tools-3.10.0-514.2.2.el7.x86_64  
 kernel-3.10.0-514.2.2.el7.x86_64
-```
+
 现在，你需要通过设置默认的grub2的启动项来启用4.9.0内核。
 
 显示在GRUB2菜单中的所有条目如下：  
-```bash
 sudo egrep ^menuentry /etc/grub2.cfg | cut -f 2 -d \'
-```
 
-结果应类似于： 
-```bash
+结果应类似于：  
 CentOS Linux 7 Rescue a0cbf86a6ef1416a8812657bb4f2b860 (4.9.0-1.el7.elrepo.x86_64)  
-CentOS Linux (4.9.0-1.el7.elrepo.x86_64) 7 (Core)
-CentOS Linux (3.10.0-514.2.2.el7.x86_64) 7 (Core)
-CentOS Linux (3.10.0-514.el7.x86_64) 7 (Core)
-CentOS Linux (0-rescue-bf94f46c6bd04792a6a42c91bae645f7) 7 (Core)
-```  
+CentOS Linux (4.9.0-1.el7.elrepo.x86_64) 7 (Core)  
+CentOS Linux (3.10.0-514.2.2.el7.x86_64) 7 (Core)  
+CentOS Linux (3.10.0-514.el7.x86_64) 7 (Core)  
+CentOS Linux (0-rescue-bf94f46c6bd04792a6a42c91bae645f7) 7 (Core)  
+
 <!--more--> 
 
 从0开始计数，4.9.0内核位于第二行，所以设置默认启动项为1：  
-```bash
 sudo grub2-set-default 1
-```  
 
 重新启动系统：  
-```bash
 sudo shutdown -r now
-```   
 
 当服务器重新上线，请重新登录并重新运行uname命令，以确认您使用的是正确的内核：  
-```bash
 uname -r
-``` 
 
 您应该看到如下结果：  
-```bash
 4.9.0-1.el7.elrepo.x86_64
-```
 
 ### 启用BBR
 
@@ -144,7 +129,8 @@ sudo firewall-cmd --zone=public --permanent --add-service=http
 sudo firewall-cmd --reload
 cd /var/www/html
 sudo dd if=/dev/zero of=500mb.zip bs=1024k count=500
-``` 
+```   
+
 最后，请从您的桌面电脑上的网络浏览器访问网址http://[your-server-IP]/500mb.zip，然后评估的下载速度。
 
 就这样。谢谢您的阅读。
