@@ -24,7 +24,6 @@ BBR（Bottleneck Bandwidth and RTT）是一个新的拥塞控制算法，由谷�
 
 为了使用BBR，你需要将你的CentOS 7机器的内核升级到4.9.0。你可以很容易得通过ELRepo RPM库中进行升级。  
 在升级之前，你可以看看当前的linux内核版本：  
-
 ```shell
 uname -r
 ```  
@@ -34,7 +33,6 @@ uname -r
 正如你看到的，目前linux的内核版本是3.10.0。
 
 安装ELRepo repo：  
- 
 ```shell
 sudo rpm --import https://www.elrepo.org/RPM-GPG-KEY-elrepo.org
 sudo rpm -Uvh http://www.elrepo.org/elrepo-release-7.0-2.el7.elrepo.noarch.rpm 

@@ -4,25 +4,30 @@ date: 2017-06-03 09:38:40
 categories: 实用工具
 tags: [shadowsocks, 翻墙]
 ---
-## 1. 前提条件
-- 一台境外centos7服务器。（推荐国外云服务器Vultr/DigitalOcean/Linode/ Bandwagon，原因不详）
-## 2. shadowsock简介
+## 前提条件
+- 一台境外centos7服务器。（推荐国外云服务器Vultr/DigitalOcean/Linode/ Bandwagon）  
+
+
+## shadowsock简介
 shadowsock可以说是目前最稳定的健康(bypass the firewall)上网方式，由clowwindy大神分享并开源了他的解决方案 [github](https://github.com/shadowsocks/shadowsocks/releases)（master分支已被约谈删除，release还有），其原理导致firewall无法根据特殊关键字和连接方式屏蔽它， 具体的可以自行google
 
-## 3. 安装pip
+## 安装pip
 pip是 python 的包管理工具。在本文中使用 python 版本的 shadowsocks，此版本的 shadowsocks 已发布到 pip 上，因此我们需要通过 pip 命令来安装。
 ```shell
 yum -y update
 yum install -y python-setuptools && easy_install pip
 ```
-## 4. 安装 shadowsocks
+## 安装 shadowsocks
 ```shell
 pip install shadowsocks
 yum clean all
 ```
-## 5. 配置 shadowsocks
-安装完成后，需要创建配置文件/etc/shadowsocks/shadowsocks.json
+## 配置 shadowsocks
+安装完成后，需要创建配置文件/etc/shadowsocks/shadowsocks.json 
+
+```shell
 vi /etc/shadowsocks/shadowsocks.json
+```
 <!--more-->
 输入以下内容
 ```shell
@@ -45,12 +50,12 @@ password:为密码
 
 上述配置的是多个用户，每个端口可以给多人使用
 
-## 6. 防火墙设置
+## 防火墙设置
 ```shell
  firewall-cmd --permanent --add-port=18071-18073/tcp  
  firewall-cmd --reload
 ``` 
-## 7. 配置自启动(可选)
+## 配置自启动(可选)
 新建启动脚本文件/etc/systemd/system/shadowsocks.service
 ```shell
 vi /etc/systemd/system/shadowsocks.service
@@ -76,6 +81,9 @@ systemctl restart shadowsocks　    #重新启动服务
 ```shell
 systemctl status shadowsocks -l
 ```
-## 8. 科学上网
+## 科学上网
+添加线路，填写云服务器ip，端口，和端口对应的密码，选择对应的加密方式，保存即可，
+具体可百度。 
+
 - ios10 苹果应用商店搜索 wingy
 - windows端 https://github.com/shadowsocks/shadowsocks-windows
