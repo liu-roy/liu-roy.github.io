@@ -51,15 +51,14 @@ password:为密码
 上述配置的是多个用户，每个端口可以给多人使用
 
 ## 防火墙设置
-```shell
  firewall-cmd --permanent --add-port=18071-18073/tcp  
- firewall-cmd --reload
-``` 
-## 配置自启动(可选)
-新建启动脚本文件/etc/systemd/system/shadowsocks.service
-```shell
-vi /etc/systemd/system/shadowsocks.service
-```
+ firewall-cmd --reload  
+
+## 配置自启动(可选)  
+新建启动脚本文件/etc/systemd/system/shadowsocks.service  
+
+vi /etc/systemd/system/shadowsocks.service  
+
 输入以下内容
 ```shell
 [Unit]
