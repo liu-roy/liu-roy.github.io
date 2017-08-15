@@ -1,5 +1,5 @@
 ---
-title: csrf-solution
+title: 跨站请求伪造防御
 date: 2017-08-14 16:22:41
 categories: 网络安全
 tags: csrf
