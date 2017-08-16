@@ -41,5 +41,6 @@ function send()
 
 用户的cookie我也拿到了，如果服务端session没有设置过期的话，我以后甚至拿这个cookie而不需用户名密码，就可以以这个用户的身份登录成功，结合csrf，来搞破坏
 
-
+##参考资料
+http://book.51cto.com/art/201102/245185.htm
 
