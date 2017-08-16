@@ -19,6 +19,7 @@ Diffie-Hellman group长度过短，目前NSA已破解1024位Diffie-Hellman
 ### 第一步：生成多位数Diffie-Hellman group
 openssl dhparam -out dhparams.pem 2048
 ### 第二步：使用安全的密码套件 
+<!--more-->
 这里举tomcat为例，因为我们用的就是tomcat，其他的服务器nginx，iis，apache等看第一篇参考资料
 Apache Tomcat
 server.xml (for JSSE) 
@@ -29,8 +30,9 @@ ciphers="TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_ECDSA_WITH_AES_128_GCM_
 ```
 因为我采用的是springboot内置tomcat方法，没有server.xml 去springboot官网 可以在application.properties配置
 ![这里写图片描述](http://img.blog.csdn.net/20170816185030266)
-
+``` xml
 server.ssl.ciphers=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,TLS_DHE_RSA_WITH_AES_128_GCM_SHA256,TLS_DHE_DSS_WITH_AES_128_GCM_SHA256,TLS_ECDHE_RSA_WITH_AES_128_SHA256,TLS_ECDHE_ECDSA_WITH_AES_128_SHA256,TLS_ECDHE_RSA_WITH_AES_128_SHA,TLS_ECDHE_ECDSA_WITH_AES_128_SHA,TLS_ECDHE_RSA_WITH_AES_256_SHA384,TLS_ECDHE_ECDSA_WITH_AES_256_SHA384,TLS_ECDHE_RSA_WITH_AES_256_SHA,TLS_ECDHE_ECDSA_WITH_AES_256_SHA,TLS_DHE_RSA_WITH_AES_128_SHA256,TLS_DHE_RSA_WITH_AES_128_SHA,TLS_DHE_DSS_WITH_AES_128_SHA256,TLS_DHE_RSA_WITH_AES_256_SHA256,TLS_DHE_DSS_WITH_AES_256_SHA,TLS_DHE_RSA_WITH_AES_256_SHA
+```
 
 针对老版本jdk，为了能够使用256位AES密码，有必要安装JCE无限强度管理策略文件，具体地址在[这里](http://www.oracle.com/technetwork/java/javase/downloads/index.html)
 ## 参考资料
