@@ -1,6 +1,6 @@
 ---
 title: effective java读书笔记
-date: 2017-03-24 15:53:24
+date: 2017-05-24 15:53:24
 categories: 读书笔记
 tags: effective java
 ---
@@ -8,8 +8,8 @@ tags: effective java
 [TOC]
 
 ---
-#effective java读书笔记
-##背景
+# effective java读书笔记
+## 背景
 去年就把这本javaer必读书——effective java中文版第二版 读完了，第一遍感觉比较肤浅，今年打算开始第二遍，顺便做一下笔记，后续会持续更新。
 <!--more-->
 ## 第2章-创建和销毁对象
@@ -203,7 +203,7 @@ public class NutritionFacts {
 }
 ```
 
-###3、用私有构造器或者枚举类型强化Singleton属性
+### 3、用私有构造器或者枚举类型强化Singleton属性
 
 - 构造器私有 public static final Elvis INSTANCE = new Elvis(); 可以通过反射调用私有构造器，为了抵御这种攻击，第二次创建该实例的时候抛出异常
 - 构造器私有 private static final Elvis INSTANCE = new Elvis()； public static Elvis getInstance() {return INSTANCE;}
@@ -285,7 +285,7 @@ public class Stack {
 ![这里写图片描述](http://img.blog.csdn.net/20170226125113497)
 
 从上图中看以看出，如果栈先增长，在收缩，那么从栈中弹出的对象将不会被当作垃圾回收，即使程序不再使用栈中的这些队象，他们也不会回收，因为栈中仍然保存这对象的引用，俗称过期引用，这个内存泄露很隐蔽。
-###### 1.2解决方法
+##### 1.2解决方法
 
 ```java
 public Object pop() {
@@ -395,7 +395,7 @@ obejct3=chaheObject3
 
 ---
 ## 第3章-对所有对象都通用的方法
-###8、覆盖equals时请遵守通用约定
+### 8、覆盖equals时请遵守通用约定
 不需要覆盖equals的情况
 - 类的每个实例本质上都是唯一的
 - 不关心类是否提供了“逻辑相等（logical equality）”的测试功能
