@@ -18,7 +18,7 @@ BBR（Bottleneck Bandwidth and RTT）是一个新的拥塞控制算法，由谷�
 ## 前提条件
 - 一个Vultr CentOS的7 x64的服务器实例。
 - 一个sudo的用户。
-
+<!--more-->
 ## 升级bbr
 ### 使用ELRepo RPM库升级内核
 
@@ -65,7 +65,6 @@ CentOS Linux (3.10.0-514.2.2.el7.x86_64) 7 (Core)
 CentOS Linux (3.10.0-514.el7.x86_64) 7 (Core)  
 CentOS Linux (0-rescue-bf94f46c6bd04792a6a42c91bae645f7) 7 (Core)  
 
-<!--more--> 
 
 从0开始计数，4.9.0内核位于第二行，所以设置默认启动项为1：  
 sudo grub2-set-default 1
