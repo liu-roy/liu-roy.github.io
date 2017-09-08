@@ -1,8 +1,8 @@
 ---
 title: 定时静音助手
 date: 2014-10-18 16:54:30
-categories: java
-tags: [android]
+categories: android
+tags: java
 ---
 # 定时静音助手 	
 
