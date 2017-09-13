@@ -365,31 +365,7 @@ QuartzSchedulerThread是quartz里真正负责时间调度的类，这个线程�
 boss线程涉及的细节非常多，看一下流程图
 ![这里写图片描述](http://img.blog.csdn.net/20170913103637406)
 
-```java
-private boolean isCandidateNewTimeEarlierWithinReason(long oldTime, boolean clearSignal) {
-
-        // So here's the deal: We know due to being signaled that 'the schedule'
-        // has changed.  We may know (if getSignaledNextFireTime() != 0) the
-        // new earliest fire time.  We may not (in which case we will assume
-        // that the new time is earlier than the trigger we have acquired).
-        // In either case, we only want to abandon our acquired trigger and
-        // go looking for a new one if "it's worth it".  It's only worth it if
-        // the time cost incurred to abandon the trigger and acquire a new one
-        // is less than the time until the currently acquired trigger will fire,
-        // otherwise we're just "thrashing" the job store (e.g. database).
-        //
-        // So the question becomes when is it "worth it"?  This will depend on
-        // the job store implementation (and of course the particular database
-        // or whatever behind it).  Ideally we would depend on the job store
-        // implementation to tell us the amount of time in which it "thinks"
-        // it can abandon the acquired trigger and acquire a new one.  However
-        // we have no current facility for having it tell us that, so we make
-        // a somewhat educated but arbitrary guess ;-).
-/**
-**
-**/
-}
-```
+![这里写图片描述](http://img.blog.csdn.net/20170913194343743)
 
 上面的流程介绍的差不多了，建议对着代码看流程，有助于理解。
 
@@ -397,7 +373,7 @@ private boolean isCandidateNewTimeEarlierWithinReason(long oldTime, boolean clea
 一图以概之
 ![这里写图片描述](http://img.blog.csdn.net/20170913155202345)
 
-以上是自己的代码分析，若有错误之处，请不吝赐教，共同提高。
+以上是自己的一家之言，若有错误之处，请不吝赐教，共同提高。
 
 ## 参考文档
 * quartz官方文档 http://www.quartz-scheduler.org/documentation
