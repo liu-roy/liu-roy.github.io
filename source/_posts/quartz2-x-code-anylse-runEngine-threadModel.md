@@ -9,12 +9,10 @@ tags: [quartz, 源码分析]
 
 ---
 
+>软件版本：quartz-2.2.3
+
 ## 序
 上一篇介绍了quartz的[启动过程](http://royliu.me/2017/04/13/quartz2-x-code-analyse-startprocess/)，这篇主要介绍quartz的执线程模型，众所周知，quartz并没有采用定时器去完成定时任务，而是通过线程去完成。为了简化对quartz线程模型的理解，就暂用下理解方式吧
-
-## 软件版本
-
->quartz-2.2.3
 
 | 类名 | 名词解释 |
 |-
@@ -364,7 +362,7 @@ QuartzSchedulerThread是quartz里真正负责时间调度的类，这个线程�
         qsRsrcs = null;
     }
 ```
-看到这么长代码头都大了，boss真不是那么好当的，里面涉及非常多的处理细节，看一下流程图
+boss线程涉及的细节非常多，看一下流程图
 ![这里写图片描述](http://img.blog.csdn.net/20170913103637406)
 
 ```java
@@ -393,13 +391,13 @@ private boolean isCandidateNewTimeEarlierWithinReason(long oldTime, boolean clea
 }
 ```
 
-上面的流程介绍的差不多了，建议对着代码看流程，有助于理解
+上面的流程介绍的差不多了，建议对着代码看流程，有助于理解。
 
-## 总结
+## 线程模型图
 一图以概之
 ![这里写图片描述](http://img.blog.csdn.net/20170913155202345)
 
-
+以上是自己的代码分析，若有错误之处，请不吝赐教，共同提高。
 
 ## 参考文档
 * quartz官方文档 http://www.quartz-scheduler.org/documentation
