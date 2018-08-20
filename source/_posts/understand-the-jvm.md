@@ -19,7 +19,7 @@ tags: jvm
 
 ## 第2章 java内存区域与内存溢出一场
 ### 运行时数据区域
-![这里写图片描述](http://img.blog.csdn.net/20170903132032524)
+![这里写图片描述](http://pdqo4ie3j.bkt.clouddn.com/18-8-20/56313689.jpg)
 #### 程序计数器
 记录当前线程执行字节码的行号
 - 每个线程拥有一个
@@ -95,9 +95,9 @@ NIO利用 原生Navtive函数直接分配堆外内存，避免java堆和Native�
 1. 通过句柄访问对象
 - 堆中划出句柄池保留对象指针，java栈存储句柄池地址
 - 二次索引，速度慢，但是对象移动无需改变reference，只需改变句柄池
-![通过句柄访问对象](http://img.blog.csdn.net/20170903140315366?)
+![通过句柄访问对象](http://pdqo4ie3j.bkt.clouddn.com/18-8-20/63600863.jpg)
 2. 通过直接指针访问对象（HotSpot）
-![直接指针访问对象](http://img.blog.csdn.net/20170903140444639?)
+![直接指针访问对象](http://pdqo4ie3j.bkt.clouddn.com/18-8-20/20379411.jpg)
 - reference 保存的是对象地址，对象中包含对象类型数据的指针
 - 速度快，少了一次指针定位
 
@@ -178,24 +178,24 @@ GC发生时让所有线程都跑到最近的“安全点”再停下来。两钟
 
 ### 垃圾收集器
 分为新生代和老年代收集器,下图中有连线的可以配合使用
-![HotSpot收集器](http://img.blog.csdn.net/20170903170848316)
+![HotSpot收集器](http://pdqo4ie3j.bkt.clouddn.com/18-8-20/27563205.jpg)
 
 #### Serial收集器 
-![Serial/Serial Old收集器运行示意图](http://img.blog.csdn.net/20170903171300852)
+![Serial/Serial Old收集器运行示意图](http://pdqo4ie3j.bkt.clouddn.com/18-8-20/6590784.jpg)
 - 新生代
 - 适合单个处理器，适合client模式
 - 单线程
 - stop the world 停止其他所有线程
 
 #### ParNew收集器
-![ParNew-Serial Old收集器运行示意图](http://img.blog.csdn.net/20170903171632586)
+![ParNew-Serial Old收集器运行示意图](http://pdqo4ie3j.bkt.clouddn.com/18-8-20/81152113.jpg)
 - 新生代
 - 多线程，适合多核处理器
 - Server模式比较好
 - 除了Serial之外，只有它可以与CMS收集器配合使用。
 
 #### Parallel Scavenge收集器
-![Parallel Scavenge+Parallel Old收集器](http://img.blog.csdn.net/20170903172511488)
+![Parallel Scavenge+Parallel Old收集器](http://pdqo4ie3j.bkt.clouddn.com/18-8-20/47297383.jpg)
 - 新生代
 - 并行多线程
 - 使用复制算法的收集器
@@ -217,7 +217,7 @@ Parallel Old是Parallel Scavenge老年代版本。
 在吞吐量优先的场合，优先使用Parallel Scavenge+Parallel Old收集器。
 
 #### CMS收集器 
-![CMS收集器](http://img.blog.csdn.net/20170903173218751)
+![CMS收集器](http://pdqo4ie3j.bkt.clouddn.com/18-8-20/43744294.jpg)
 Concurrent Mark Sweep，以获取最短回收停顿时间为目标的收集器。
 相应时间优先，用户体验优先，采用CMS收集器。
 采用“标记-清除”算法实现。
@@ -232,7 +232,7 @@ Concurrent Mark Sweep，以获取最短回收停顿时间为目标的收集器�
 - 标记-清除”导致内存碎片的产生。从而导致Full GC的产生。为了解决这个问题，CMS提供一个-XX:CMSFullGCsBeforeCompaction，用于设置执行多少次不压缩的Full GC后，跟着来一次带压缩的。
 
 #### G1 收集器
-![G1收集器](http://img.blog.csdn.net/20170903173657003)
+![G1收集器](http://pdqo4ie3j.bkt.clouddn.com/18-8-20/1172110.jpg)
 面向服务器端的收集器。
 优点：
 - 并行与并发：充分利用多CPU，多核来缩短Stop-The-World的停顿时间。
