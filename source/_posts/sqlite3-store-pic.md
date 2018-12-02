@@ -64,8 +64,8 @@ cout<<id<<" "<<picData<<endl;
 ```
 
 ### 测试结果
-![这里写图片描述](http://pdqo4ie3j.bkt.clouddn.com/18-8-20/50443506.jpg)
-![这里写图片描述](http://pdqo4ie3j.bkt.clouddn.com/18-8-20/36562306.jpg)
+![这里写图片描述](http://d17znh8lvwja9e.cloudfront.net/sqlite3-store-pic/1.jpg)
+![这里写图片描述](http://d17znh8lvwja9e.cloudfront.net/sqlite3-store-pic/2.jpg)
 
 ## 总结
 

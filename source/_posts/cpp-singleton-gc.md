@@ -64,7 +64,7 @@ int main(int argc, char *argv[])
 }
 ```
 ## 运行结果
-![这里写图片描述](http://pdqo4ie3j.bkt.clouddn.com/18-8-20/19741595.jpg)
+![这里写图片描述](http://d17znh8lvwja9e.cloudfront.net/cpp-singleton-gc/1.jpg)
 
 ## 参考文献
 [http://blog.csdn.net/hackbuteer1/article/details/7460019](http://blog.csdn.net/hackbuteer1/article/details/7460019)
