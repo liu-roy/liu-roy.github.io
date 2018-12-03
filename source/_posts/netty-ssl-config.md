@@ -143,7 +143,7 @@ public class SslContextFactory {
 ### 加入NettyHandler
 Netty 提供了一个SslHandler，主要用于加密和解密
 在大多数情况下,SslHandler 将成为 ChannelPipeline 中的第一个 ChannelHandler 。这将确保所有其他 ChannelHandler 应用他们的逻辑到数据后加密后才发生,从而确保他们的变化是安全的。
-![这里写图片描述](http://d17znh8lvwja9e.cloudfront.net/netty-ssl-config/1.jpg)
+![这里写图片描述](http://images.royliu.me/netty-ssl-config/1.jpg)
 图片来自网络
 ```
 		SSLContext sslCtx = SslContextFactory.getServerContext();

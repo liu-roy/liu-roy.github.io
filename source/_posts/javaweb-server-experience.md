@@ -15,12 +15,12 @@ tags: [高可用,伸缩性]
 - **缓存层可伸缩**
 - **数据库可伸缩**
 
-![这里写图片描述](http://d17znh8lvwja9e.cloudfront.net/webserver-ha-experience/1.jpg)
+![这里写图片描述](http://images.royliu.me/webserver-ha-experience/1.jpg)
 下面来分层介绍实践方法。
 <!--more-->
 ## 入口层高可用
 nigix两个 keeplive保活 心跳做好。
-![这里写图片描述](http://d17znh8lvwja9e.cloudfront.net/webserver-ha-experience/2.jpg)
+![这里写图片描述](http://images.royliu.me/webserver-ha-experience/2.jpg)
 
 - 使用心跳技术：keeplive提供这个技术
 - 比如机器A IP是1.2.3.4，机器B IP是1.2.3.5，那么再申请一个IP （1.2.3.6）我们称之为心跳IP，平时绑定再A上面，如果A宕机，那么IP会自动绑定到B上面
@@ -34,13 +34,13 @@ nigix两个 keeplive保活 心跳做好。
 不算，客户端（比如浏览器） 解析完后会随机选一个 IP访问 ， 而不是一个失败后就去另一个 。 所以如果一台机器当机 ，那么就有一半左右的用户无法访问 。 
 
 ## 业务层高可用
-![这里写图片描述](http://d17znh8lvwja9e.cloudfront.net/webserver-ha-experience/3.jpg)
+![这里写图片描述](http://images.royliu.me/webserver-ha-experience/3.jpg)
 
  - 业务层不要有状态 ， 状态分散到缓存层和数据库层 。 只要没有状态，业务层的服务死掉后，前面的nginx会自动把流量打到剩下的服务 。 所以，业务层无状态是一个重点。
  - 友情提醒：不要因为想让服务无状态就直接用cookie session, 里边的坑有点大，考察清楚后再用比较好。比如重放攻击 。
  
 ## 缓存层高可用
-![这里写图片描述](http://d17znh8lvwja9e.cloudfront.net/webserver-ha-experience/4.jpg)
+![这里写图片描述](http://images.royliu.me/webserver-ha-experience/4.jpg)
 - 缓存层分得细一点，保证单台缓存宕机后数据库还能撑得住 。 
 - 中小模下缓存层和业务层可以混合部署， 这样可以节省机器 
 - 大型规模网站，业务层和缓存层分开部署。
@@ -51,7 +51,7 @@ nigix两个 keeplive保活 心跳做好。
 - MongoDB也有ReplicaSet的概念，基本都能满足大家的需求。 
 
 ##高可用小结
-![这里写图片描述](http://d17znh8lvwja9e.cloudfront.net/webserver-ha-experience/5.jpg)
+![这里写图片描述](http://images.royliu.me/webserver-ha-experience/5.jpg)
 
 ##入口层可伸缩
 - 入囗层如何提供伸缩性？直接铺机器 ？然后DNS加IP就可以了吧？ 
@@ -99,4 +99,4 @@ nigix两个 keeplive保活 心跳做好。
 - 定期滚动
 
 
-![这里写图片描述](http://d17znh8lvwja9e.cloudfront.net/webserver-ha-experience/6.jpg)
+![这里写图片描述](http://images.royliu.me/webserver-ha-experience/6.jpg)
