@@ -46,7 +46,6 @@ Binding将Exchange与Queue关联起来，这样RabbitMQ就知道如何正确地�
 ![](http://images.royliu.me/rabbitmq-base-concept/2.jpg)
 ## BindingKey
 在绑定Exchange与Queue的同时，一般会指定一个binding key；生产者将消息发送给Exchange时，一般会指定一个routing key；当binding key与routing key一致，或者符合模式匹配，消息就会被路由到对应的Queue中。在绑定多个Queue到同一个Exchange的时候，这些Binding允许使用相同的binding key。binding key 并不是在所有情况下都生效，它依赖于Exchange Type，比如fanout类型的Exchange就会无视binding key，而是将消息路由到所有绑定到该Exchange的Queue。
-![](http://images.royliu.me/rabbitmq-base-concept/3.jpg)
 ## Exchange Types
 RabbitMQ常用的Exchange Type有fanout、direct、topic、headers这四种
 
