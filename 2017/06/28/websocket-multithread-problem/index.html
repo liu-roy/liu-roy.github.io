@@ -101,14 +101,14 @@
 <meta property="og:site_name" content="freedom">
 <meta property="og:description" content="开发框架 springMVC tomcat8  问题描述后端建立websocket 前端连接上来，后台会主动推送agent脚本执行信息，由于采用netty框架，保证并发性，执行的结果是多线程处理的，通过websocket返回前端居然报错了，很是费解。症状见下图。">
 <meta property="og:locale" content="zh-Hans">
-<meta property="og:image" content="http://images.royliu.me/websocket-multithread-problem/1.jpg">
-<meta property="og:image" content="http://images.royliu.me/websocket-multithread-problem/2.jpg">
-<meta property="og:image" content="http://images.royliu.me/websocket-multithread-problem/3.jpg">
-<meta property="og:updated_time" content="2020-04-09T07:16:05.587Z">
+<meta property="og:image" content="http://roy-markdown.oss-cn-qingdao.aliyuncs.com/websocket-multithread-problem/1.jpg">
+<meta property="og:image" content="http://roy-markdown.oss-cn-qingdao.aliyuncs.com/websocket-multithread-problem/2.jpg">
+<meta property="og:image" content="http://roy-markdown.oss-cn-qingdao.aliyuncs.com/websocket-multithread-problem/3.jpg">
+<meta property="og:updated_time" content="2020-04-09T11:35:37.779Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="websocket多线程问题">
 <meta name="twitter:description" content="开发框架 springMVC tomcat8  问题描述后端建立websocket 前端连接上来，后台会主动推送agent脚本执行信息，由于采用netty框架，保证并发性，执行的结果是多线程处理的，通过websocket返回前端居然报错了，很是费解。症状见下图。">
-<meta name="twitter:image" content="http://images.royliu.me/websocket-multithread-problem/1.jpg">
+<meta name="twitter:image" content="http://roy-markdown.oss-cn-qingdao.aliyuncs.com/websocket-multithread-problem/1.jpg">
 
 
 
@@ -381,7 +381,7 @@
 <li>springMVC</li>
 <li>tomcat8</li>
 </ul>
-<h2 id="问题描述"><a href="#问题描述" class="headerlink" title="问题描述"></a>问题描述</h2><p>后端建立websocket 前端连接上来，后台会主动推送agent脚本执行信息，由于采用netty框架，保证并发性，执行的结果是多线程处理的，通过websocket返回前端居然报错了，很是费解。症状见下图。<br><img src="http://images.royliu.me/websocket-multithread-problem/1.jpg" alt><br><img src="http://images.royliu.me/websocket-multithread-problem/2.jpg" alt><br><a id="more"></a></p>
+<h2 id="问题描述"><a href="#问题描述" class="headerlink" title="问题描述"></a>问题描述</h2><p>后端建立websocket 前端连接上来，后台会主动推送agent脚本执行信息，由于采用netty框架，保证并发性，执行的结果是多线程处理的，通过websocket返回前端居然报错了，很是费解。症状见下图。<br><img src="http://roy-markdown.oss-cn-qingdao.aliyuncs.com/websocket-multithread-problem/1.jpg" alt><br><img src="http://roy-markdown.oss-cn-qingdao.aliyuncs.com/websocket-multithread-problem/2.jpg" alt><br><a id="more"></a></p>
 <h2 id="排查解决过程"><a href="#排查解决过程" class="headerlink" title="排查解决过程"></a>排查解决过程</h2><p>从图中可以看出，远端处于【TEXT_PARTIAL_WRITING】状态，就这这个关键字google（不得不说就英文搜索而言，google强太多），<br>最后发现，tomcat的websocket没有相关的多线程处理，有人在apache上提bug，可以看一下开发者给的回复：<br><a href="https://bz.apache.org/bugzilla/show_bug.cgi?id=56026" target="_blank" rel="noopener">tomcat8 websocker bug</a></p>
 <figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">I have some sympathy with this view. Given that the Javadoc for RemoteEndpoint.Basic explicitly states that  </span><br><span class="line">concurrent attempts to send messages are not allowed and the Javadoc for RemoteEndpoint.Async doesn't, you'd be  </span><br><span class="line">forgiven for thinking that meant that RemoteEndpoint.Async permitted concurrent attempts to send messages.  </span><br><span class="line">Unfortunately, the (not very well documented) intention of the WebSocket EG was not to allow concurrent attempts to send messages. [1]  </span><br><span class="line"></span><br><span class="line">I did take a quick look at adding an option to relax (i.e. ignoring) this but the change required to do this with the current Tomcat code would be far from trivial.  </span><br><span class="line"></span><br><span class="line">I'm marking this as INVALID since the intention of the EG was to not allow this but WONTFIX is almost as appropriate if this is viewed as an enhancement request.</span><br><span class="line">As an aside, one reason not to implement this particular enhancement is that apps that depended on it would not be portable between containers.</span><br></pre></td></tr></table></figure>
 <h3 id="提bug的人提出了一个很常见的需求："><a href="#提bug的人提出了一个很常见的需求：" class="headerlink" title="提bug的人提出了一个很常见的需求："></a>提bug的人提出了一个很常见的需求：</h3><p>一个简单的聊天应用程序与3个用户聊天将导致并发调用Async.sendText（）当A和B都发送一个必须传递到C的消息，所以用例是很常见的。<br>应用程序担心同步或排队并发调用Async.sendText（）会对执行并发写入的应用程序造成巨大的负担，我相信这不是JSR 356的意图（尽管规范并没有说明并发保证） 。</p>
@@ -390,7 +390,7 @@
 <h2 id="随之而来的新的问题"><a href="#随之而来的新的问题" class="headerlink" title="随之而来的新的问题"></a>随之而来的新的问题</h2><p>采用同步操作之后，由于agent会有很多中间结果，当第一条消息到来把锁抢占之后，后面的结果已经到来，当锁释放之后，其他线程抢占锁，尼玛，原先有时间顺序的结果变得混乱无序.  难道真的要自己实现一套缓冲队列吗。左思右想，最终决定还是有公平锁好了 </p>
 <p>公平锁是个好东西，自己内部实现了一套等待队列，虽然效率有点低，但是对业务来说可以满足需求</p>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="keyword">static</span> ReentrantLock lock = <span class="keyword">new</span> ReentrantLock(<span class="keyword">true</span>);</span><br></pre></td></tr></table></figure>
-<p><img src="http://images.royliu.me/websocket-multithread-problem/3.jpg" alt></p>
+<p><img src="http://roy-markdown.oss-cn-qingdao.aliyuncs.com/websocket-multithread-problem/3.jpg" alt></p>
 
       
     </div>

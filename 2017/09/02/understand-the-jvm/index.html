@@ -101,20 +101,20 @@
 <meta property="og:site_name" content="freedom">
 <meta property="og:description" content="[TOC]  深入理解java虚拟机读书笔记序基于此书第二版，会加上自己的一些理解，如有错误，望指出。后续会一点点更新 第1章 走近java主要介绍了java的技术体系，java发展史，java虚拟机发展史和java未来">
 <meta property="og:locale" content="zh-Hans">
-<meta property="og:image" content="http://images.royliu.me/understand-the-jvm/1.jpg">
-<meta property="og:image" content="http://images.royliu.me/understand-the-jvm/2.jpg">
-<meta property="og:image" content="http://images.royliu.me/understand-the-jvm/3.jpg">
-<meta property="og:image" content="http://images.royliu.me/understand-the-jvm/4.jpg">
-<meta property="og:image" content="http://images.royliu.me/understand-the-jvm/5.jpg">
-<meta property="og:image" content="http://images.royliu.me/understand-the-jvm/6.jpg">
-<meta property="og:image" content="http://images.royliu.me/understand-the-jvm/7.jpg">
-<meta property="og:image" content="http://images.royliu.me/understand-the-jvm/8.jpg">
-<meta property="og:image" content="http://images.royliu.me/understand-the-jvm/9.jpg">
-<meta property="og:updated_time" content="2020-04-09T07:16:05.587Z">
+<meta property="og:image" content="http://roy-markdown.oss-cn-qingdao.aliyuncs.com/understand-the-jvm/1.jpg">
+<meta property="og:image" content="http://roy-markdown.oss-cn-qingdao.aliyuncs.com/understand-the-jvm/2.jpg">
+<meta property="og:image" content="http://roy-markdown.oss-cn-qingdao.aliyuncs.com/understand-the-jvm/3.jpg">
+<meta property="og:image" content="http://roy-markdown.oss-cn-qingdao.aliyuncs.com/understand-the-jvm/4.jpg">
+<meta property="og:image" content="http://roy-markdown.oss-cn-qingdao.aliyuncs.com/understand-the-jvm/5.jpg">
+<meta property="og:image" content="http://roy-markdown.oss-cn-qingdao.aliyuncs.com/understand-the-jvm/6.jpg">
+<meta property="og:image" content="http://roy-markdown.oss-cn-qingdao.aliyuncs.com/understand-the-jvm/7.jpg">
+<meta property="og:image" content="http://roy-markdown.oss-cn-qingdao.aliyuncs.com/understand-the-jvm/8.jpg">
+<meta property="og:image" content="http://roy-markdown.oss-cn-qingdao.aliyuncs.com/understand-the-jvm/9.jpg">
+<meta property="og:updated_time" content="2020-04-09T11:35:37.804Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="深入理解java虚拟机">
 <meta name="twitter:description" content="[TOC]  深入理解java虚拟机读书笔记序基于此书第二版，会加上自己的一些理解，如有错误，望指出。后续会一点点更新 第1章 走近java主要介绍了java的技术体系，java发展史，java虚拟机发展史和java未来">
-<meta name="twitter:image" content="http://images.royliu.me/understand-the-jvm/1.jpg">
+<meta name="twitter:image" content="http://roy-markdown.oss-cn-qingdao.aliyuncs.com/understand-the-jvm/1.jpg">
 
 
 
@@ -388,7 +388,7 @@
 <hr>
 <h1 id="深入理解java虚拟机读书笔记"><a href="#深入理解java虚拟机读书笔记" class="headerlink" title="深入理解java虚拟机读书笔记"></a>深入理解java虚拟机读书笔记</h1><h2 id="序"><a href="#序" class="headerlink" title="序"></a>序</h2><p>基于此书第二版，会加上自己的一些理解，如有错误，望指出。后续会一点点更新</p>
 <h2 id="第1章-走近java"><a href="#第1章-走近java" class="headerlink" title="第1章 走近java"></a>第1章 走近java</h2><p>主要介绍了java的技术体系，java发展史，java虚拟机发展史和java未来<br><a id="more"></a></p>
-<h2 id="第2章-java内存区域与内存溢出一场"><a href="#第2章-java内存区域与内存溢出一场" class="headerlink" title="第2章 java内存区域与内存溢出一场"></a>第2章 java内存区域与内存溢出一场</h2><h3 id="运行时数据区域"><a href="#运行时数据区域" class="headerlink" title="运行时数据区域"></a>运行时数据区域</h3><p><img src="http://images.royliu.me/understand-the-jvm/1.jpg" alt="这里写图片描述"></p>
+<h2 id="第2章-java内存区域与内存溢出一场"><a href="#第2章-java内存区域与内存溢出一场" class="headerlink" title="第2章 java内存区域与内存溢出一场"></a>第2章 java内存区域与内存溢出一场</h2><h3 id="运行时数据区域"><a href="#运行时数据区域" class="headerlink" title="运行时数据区域"></a>运行时数据区域</h3><p><img src="http://roy-markdown.oss-cn-qingdao.aliyuncs.com/understand-the-jvm/1.jpg" alt="这里写图片描述"></p>
 <h4 id="程序计数器"><a href="#程序计数器" class="headerlink" title="程序计数器"></a>程序计数器</h4><p>记录当前线程执行字节码的行号</p>
 <ul>
 <li>每个线程拥有一个</li>
@@ -447,10 +447,10 @@
 </ol>
 <ul>
 <li>堆中划出句柄池保留对象指针，java栈存储句柄池地址</li>
-<li>二次索引，速度慢，但是对象移动无需改变reference，只需改变句柄池<br><img src="http://images.royliu.me/understand-the-jvm/2.jpg" alt="通过句柄访问对象"></li>
+<li>二次索引，速度慢，但是对象移动无需改变reference，只需改变句柄池<br><img src="http://roy-markdown.oss-cn-qingdao.aliyuncs.com/understand-the-jvm/2.jpg" alt="通过句柄访问对象"></li>
 </ul>
 <ol start="2">
-<li>通过直接指针访问对象（HotSpot）<br><img src="http://images.royliu.me/understand-the-jvm/3.jpg" alt="直接指针访问对象"></li>
+<li>通过直接指针访问对象（HotSpot）<br><img src="http://roy-markdown.oss-cn-qingdao.aliyuncs.com/understand-the-jvm/3.jpg" alt="直接指针访问对象"></li>
 </ol>
 <ul>
 <li>reference 保存的是对象地址，对象中包含对象类型数据的指针</li>
@@ -510,22 +510,22 @@
 <li>安全点<br>HotSpot在特定的位置记录安全点。GC只在到达安全点的时候才暂停。<br>指令序列复用会导致“长时间执行”，如：方法调用，循环跳转，异常跳转等。<br>GC发生时让所有线程都跑到最近的“安全点”再停下来。两钟方式：抢先式中断和主动中断。</li>
 <li>安全区域<br>指在一段代码片段之中，引用关系不会发生变化。在这个区域中的任意地方开始GC都是安全的，可以将SafeRegion当做是SafePoint的扩展。</li>
 </ul>
-<h3 id="垃圾收集器"><a href="#垃圾收集器" class="headerlink" title="垃圾收集器"></a>垃圾收集器</h3><p>分为新生代和老年代收集器,下图中有连线的可以配合使用<br><img src="http://images.royliu.me/understand-the-jvm/4.jpg" alt="HotSpot收集器"></p>
-<h4 id="Serial收集器"><a href="#Serial收集器" class="headerlink" title="Serial收集器"></a>Serial收集器</h4><p><img src="http://images.royliu.me/understand-the-jvm/5.jpg" alt="Serial/Serial Old收集器运行示意图"></p>
+<h3 id="垃圾收集器"><a href="#垃圾收集器" class="headerlink" title="垃圾收集器"></a>垃圾收集器</h3><p>分为新生代和老年代收集器,下图中有连线的可以配合使用<br><img src="http://roy-markdown.oss-cn-qingdao.aliyuncs.com/understand-the-jvm/4.jpg" alt="HotSpot收集器"></p>
+<h4 id="Serial收集器"><a href="#Serial收集器" class="headerlink" title="Serial收集器"></a>Serial收集器</h4><p><img src="http://roy-markdown.oss-cn-qingdao.aliyuncs.com/understand-the-jvm/5.jpg" alt="Serial/Serial Old收集器运行示意图"></p>
 <ul>
 <li>新生代</li>
 <li>适合单个处理器，适合client模式</li>
 <li>单线程</li>
 <li>stop the world 停止其他所有线程</li>
 </ul>
-<h4 id="ParNew收集器"><a href="#ParNew收集器" class="headerlink" title="ParNew收集器"></a>ParNew收集器</h4><p><img src="http://images.royliu.me/understand-the-jvm/6.jpg" alt="ParNew-Serial Old收集器运行示意图"></p>
+<h4 id="ParNew收集器"><a href="#ParNew收集器" class="headerlink" title="ParNew收集器"></a>ParNew收集器</h4><p><img src="http://roy-markdown.oss-cn-qingdao.aliyuncs.com/understand-the-jvm/6.jpg" alt="ParNew-Serial Old收集器运行示意图"></p>
 <ul>
 <li>新生代</li>
 <li>多线程，适合多核处理器</li>
 <li>Server模式比较好</li>
 <li>除了Serial之外，只有它可以与CMS收集器配合使用。</li>
 </ul>
-<h4 id="Parallel-Scavenge收集器"><a href="#Parallel-Scavenge收集器" class="headerlink" title="Parallel Scavenge收集器"></a>Parallel Scavenge收集器</h4><p><img src="http://images.royliu.me/understand-the-jvm/7.jpg" alt="Parallel Scavenge+Parallel Old收集器"></p>
+<h4 id="Parallel-Scavenge收集器"><a href="#Parallel-Scavenge收集器" class="headerlink" title="Parallel Scavenge收集器"></a>Parallel Scavenge收集器</h4><p><img src="http://roy-markdown.oss-cn-qingdao.aliyuncs.com/understand-the-jvm/7.jpg" alt="Parallel Scavenge+Parallel Old收集器"></p>
 <ul>
 <li>新生代</li>
 <li>并行多线程</li>
@@ -543,7 +543,7 @@
 <li>多线程</li>
 <li>“标记-整理”算法。<br>在吞吐量优先的场合，优先使用Parallel Scavenge+Parallel Old收集器。</li>
 </ul>
-<h4 id="CMS收集器"><a href="#CMS收集器" class="headerlink" title="CMS收集器"></a>CMS收集器</h4><p><img src="http://images.royliu.me/understand-the-jvm/8.jpg" alt="CMS收集器"><br>Concurrent Mark Sweep，以获取最短回收停顿时间为目标的收集器。<br>相应时间优先，用户体验优先，采用CMS收集器。<br>采用“标记-清除”算法实现。<br>收集步骤：</p>
+<h4 id="CMS收集器"><a href="#CMS收集器" class="headerlink" title="CMS收集器"></a>CMS收集器</h4><p><img src="http://roy-markdown.oss-cn-qingdao.aliyuncs.com/understand-the-jvm/8.jpg" alt="CMS收集器"><br>Concurrent Mark Sweep，以获取最短回收停顿时间为目标的收集器。<br>相应时间优先，用户体验优先，采用CMS收集器。<br>采用“标记-清除”算法实现。<br>收集步骤：</p>
 <ul>
 <li>初始标记：只是标记一下GC Roots能直接关联到的对象，速度很快。</li>
 <li>并发标记：可以与用户线程一起工作。并发标记阶段就是进行GC Roots Tracing 的过程</li>
@@ -553,7 +553,7 @@
 <li>无法处理浮动垃圾。</li>
 <li>标记-清除”导致内存碎片的产生。从而导致Full GC的产生。为了解决这个问题，CMS提供一个-XX:CMSFullGCsBeforeCompaction，用于设置执行多少次不压缩的Full GC后，跟着来一次带压缩的。</li>
 </ul>
-<h4 id="G1-收集器"><a href="#G1-收集器" class="headerlink" title="G1 收集器"></a>G1 收集器</h4><p><img src="http://images.royliu.me/understand-the-jvm/9.jpg" alt="G1收集器"><br>面向服务器端的收集器。<br>优点：</p>
+<h4 id="G1-收集器"><a href="#G1-收集器" class="headerlink" title="G1 收集器"></a>G1 收集器</h4><p><img src="http://roy-markdown.oss-cn-qingdao.aliyuncs.com/understand-the-jvm/9.jpg" alt="G1收集器"><br>面向服务器端的收集器。<br>优点：</p>
 <ul>
 <li>并行与并发：充分利用多CPU，多核来缩短Stop-The-World的停顿时间。</li>
 <li>分代收集：能够采用不同的方式去处理新创建的对象和已经存货一段时间、熬过多次GC的就对象以获取更好的收集效果。</li>
