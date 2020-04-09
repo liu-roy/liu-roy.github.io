@@ -36,14 +36,14 @@ message ackonwledgment 即消息回执，消费者在消费完消息后发送一
 消费者在开启acknowledge的情况下，对接收到的消息可以根据业务的需要异步对消息进行确认，prefetch允许为每个consumer指定最大的unacked messages数目。例如：设置prefetchCount=10，则Queue每次给每个消费者（假设一共2个AB）发送10条消息，消费者无需马上回应，消费者将10条消息缓存本地客户端；当一个消费者处理完1条消息后Queue会再给该消费者发送一条消息。如果两个消费者都没有回复任何一条ack，则queue就不会继续发送消息。
 ## Exchange
 在RabbitMQ中生产者不会直接将消息发送队列。实际的情况是，生产者将消息发送到Exchange，由Exchange将消息路由到一个或多个Queue中（或者丢弃）。
-![](http://images.royliu.me/rabbitmq-base-concept/1.jpg)
+![](http://roy-markdown.oss-cn-qingdao.aliyuncs.com/rabbitmq-base-concept/1.jpg)
 
 ## RoutingKey
 routingKey针对生产者而言，发送消息时一般需要指定routingkey，而这个routing key需要与Exchange Type及binding key联合使用才能最终生效。
 
 ## Binding
 Binding将Exchange与Queue关联起来，这样RabbitMQ就知道如何正确地将消息路由到指定的Queue了。
-![](http://images.royliu.me/rabbitmq-base-concept/2.jpg)
+![](http://roy-markdown.oss-cn-qingdao.aliyuncs.com/rabbitmq-base-concept/2.jpg)
 ## BindingKey
 在绑定Exchange与Queue的同时，一般会指定一个binding key；生产者将消息发送给Exchange时，一般会指定一个routing key；当binding key与routing key一致，或者符合模式匹配，消息就会被路由到对应的Queue中。在绑定多个Queue到同一个Exchange的时候，这些Binding允许使用相同的binding key。binding key 并不是在所有情况下都生效，它依赖于Exchange Type，比如fanout类型的Exchange就会无视binding key，而是将消息路由到所有绑定到该Exchange的Queue。
 ## Exchange Types

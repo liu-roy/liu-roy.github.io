@@ -10,8 +10,8 @@ tags: [websocket]
 
 ## 问题描述
 后端建立websocket 前端连接上来，后台会主动推送agent脚本执行信息，由于采用netty框架，保证并发性，执行的结果是多线程处理的，通过websocket返回前端居然报错了，很是费解。症状见下图。
-![](http://images.royliu.me/websocket-multithread-problem/1.jpg)
-![](http://images.royliu.me/websocket-multithread-problem/2.jpg)
+![](http://roy-markdown.oss-cn-qingdao.aliyuncs.com/websocket-multithread-problem/1.jpg)
+![](http://roy-markdown.oss-cn-qingdao.aliyuncs.com/websocket-multithread-problem/2.jpg)
 <!--more-->
 ## 排查解决过程
 从图中可以看出，远端处于【TEXT_PARTIAL_WRITING】状态，就这这个关键字google（不得不说就英文搜索而言，google强太多），
@@ -49,4 +49,4 @@ javaDoc，RemoteEndpoint.Basic明确指出不允许并发发送消息，但是Re
 ```java
  private static ReentrantLock lock = new ReentrantLock(true);
 ```
-![](http://images.royliu.me/websocket-multithread-problem/3.jpg)
+![](http://roy-markdown.oss-cn-qingdao.aliyuncs.com/websocket-multithread-problem/3.jpg)

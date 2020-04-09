@@ -63,7 +63,7 @@ $(function() {
 为了能减少对代码的修改，采用注解加拦截器的方式，这样做的好处是通过拦截器和注解，对特定方法做出一致性处理，减少代码量
 具体流程图如下
 
-![这里写图片描述](http://images.royliu.me/csrf-solution/1.jpg)
+![这里写图片描述](http://roy-markdown.oss-cn-qingdao.aliyuncs.com/csrf-solution/1.jpg)
 
 
 ### 关键代码CSRFInterceptor 

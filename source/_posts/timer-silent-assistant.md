@@ -52,7 +52,7 @@ tags: java
 </LinearLayout>
 ```
 ## 效果图
-![这里写图片描述](http://images.royliu.me/silence-assisant/1.jpg)
+![这里写图片描述](http://roy-markdown.oss-cn-qingdao.aliyuncs.com/silence-assisant/1.jpg)
 
 ## 功能设计
 ### 原理介绍
@@ -205,10 +205,10 @@ public class TimeReceiver extends BroadcastReceiver
 ```
 ## 程序运行效果
 ### 初始状态
-![这里写图片描述](http://images.royliu.me/silence-assisant/2.jpg)
+![这里写图片描述](http://roy-markdown.oss-cn-qingdao.aliyuncs.com/silence-assisant/2.jpg)
 ### 开始静音状态
-![这里写图片描述](http://images.royliu.me/silence-assisant/3.jpg)
+![这里写图片描述](http://roy-markdown.oss-cn-qingdao.aliyuncs.com/silence-assisant/3.jpg)
 ### 恢复正常状态
-![这里写图片描述](http://images.royliu.me/silence-assisant/4.jpg)
+![这里写图片描述](http://roy-markdown.oss-cn-qingdao.aliyuncs.com/silence-assisant/4.jpg)
 ## 源码地址
 [github](https://github.com/liu-roy/timeSilent)

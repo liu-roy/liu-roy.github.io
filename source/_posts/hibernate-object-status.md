@@ -20,7 +20,7 @@ Hibernate定义并支持下列对象状态(state):
 
 具体可以看下图（图片来自网络） 
 
-![这里写图片描述](http://images.royliu.me/hibernate-object-status/1.jpg)
+![这里写图片描述](http://roy-markdown.oss-cn-qingdao.aliyuncs.com/hibernate-object-status/1.jpg)
 
 
 
@@ -49,7 +49,7 @@ Hibernate定义并支持下列对象状态(state):
         return new RestResult(true, "编辑分组成功");
     }
 ```
-![这里写图片描述](http://images.royliu.me/hibernate-object-status/2.jpg)
+![这里写图片描述](http://roy-markdown.oss-cn-qingdao.aliyuncs.com/hibernate-object-status/2.jpg)
 
 ### 从持久态变为游离态演示
 假如说你不想对category进行自动更新，则可以通过将持久态转化为游离态，也就是托管状态，通过session.evict 方法，删除session中的category,此时scriptService.save(script)只会保存自己的对象。 
@@ -97,4 +97,4 @@ public class ScriptServiceImpl implements ScriptService {
     }
 ```
 
-![这里写图片描述](http://images.royliu.me/hibernate-object-status/3.jpg)
+![这里写图片描述](http://roy-markdown.oss-cn-qingdao.aliyuncs.com/hibernate-object-status/3.jpg)
