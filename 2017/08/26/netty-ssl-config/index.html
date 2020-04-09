@@ -1,0 +1,798 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.1" rel="stylesheet" type="text/css">
+
+
+  <meta name="keywords" content="netty,ssl,">
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.1">
+
+
+
+
+
+
+<meta name="description" content="Netty SSL安全配置 [TOC]  摘要在研发平台的过程中，涉及到平台网关和前置agent的通信加密，虽然目前软件在内网中，但是由于平台和agent的特殊性，一旦被控制，部署的软件就会受到很大威胁，平台网关采用Netty开发，下面主要介绍一下netty的ssl配置和安全软件扫出的Diffie-Hellman弱密码问题解决方法">
+<meta name="keywords" content="netty,ssl">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Netty SSL安全配置">
+<meta property="og:url" content="http://yoursite.com/2017/08/26/netty-ssl-config/index.html">
+<meta property="og:site_name" content="freedom">
+<meta property="og:description" content="Netty SSL安全配置 [TOC]  摘要在研发平台的过程中，涉及到平台网关和前置agent的通信加密，虽然目前软件在内网中，但是由于平台和agent的特殊性，一旦被控制，部署的软件就会受到很大威胁，平台网关采用Netty开发，下面主要介绍一下netty的ssl配置和安全软件扫出的Diffie-Hellman弱密码问题解决方法">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="http://images.royliu.me/netty-ssl-config/1.jpg">
+<meta property="og:updated_time" content="2020-04-09T07:16:05.582Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Netty SSL安全配置">
+<meta name="twitter:description" content="Netty SSL安全配置 [TOC]  摘要在研发平台的过程中，涉及到平台网关和前置agent的通信加密，虽然目前软件在内网中，但是由于平台和agent的特殊性，一旦被控制，部署的软件就会受到很大威胁，平台网关采用Netty开发，下面主要介绍一下netty的ssl配置和安全软件扫出的Diffie-Hellman弱密码问题解决方法">
+<meta name="twitter:image" content="http://images.royliu.me/netty-ssl-config/1.jpg">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    sidebar: {"position":"left","display":"post","offset":12,"offset_float":0,"b2t":false,"scrollpercent":false},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2017/08/26/netty-ssl-config/">
+
+
+
+
+
+  <title>Netty SSL安全配置 | freedom</title>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">freedom</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">Coding changes the world</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br>
+            
+            关于
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-commonweal">
+          <a href="/404.html" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-heartbeat"></i> <br>
+            
+            公益404
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2017/08/26/netty-ssl-config/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="roy liu">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/myself.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="freedom">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Netty SSL安全配置</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-08-26T14:51:43+08:00">
+                2017-08-26
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/网络安全/" itemprop="url" rel="index">
+                    <span itemprop="name">网络安全</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="Netty-SSL安全配置"><a href="#Netty-SSL安全配置" class="headerlink" title="Netty SSL安全配置"></a>Netty SSL安全配置</h1><hr>
+<p>[TOC]</p>
+<hr>
+<h2 id="摘要"><a href="#摘要" class="headerlink" title="摘要"></a>摘要</h2><p>在研发平台的过程中，涉及到平台网关和前置agent的通信加密，虽然目前软件在内网中，但是由于平台和agent的特殊性，一旦被控制，部署的软件就会受到很大威胁，平台网关采用Netty开发，下面主要介绍一下netty的ssl配置和安全软件扫出的Diffie-Hellman弱密码问题解决方法<br><a id="more"></a></p>
+<h2 id="主要名词解释"><a href="#主要名词解释" class="headerlink" title="主要名词解释"></a>主要名词解释</h2><table>
+<thead>
+<tr>
+<th>英文名称或缩写</th>
+<th>名词解释</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Netty</td>
+<td>高性能服务器端编程框架</td>
+</tr>
+<tr>
+<td>OpenSSL</td>
+<td>安全套接字层密码库</td>
+</tr>
+<tr>
+<td>KeyTool</td>
+<td>密钥和证书管理工具</td>
+</tr>
+<tr>
+<td>Diffie-Hellman</td>
+<td>密钥交换算法</td>
+</tr>
+</tbody>
+</table>
+<h2 id="SSL常用认证方式介绍"><a href="#SSL常用认证方式介绍" class="headerlink" title="SSL常用认证方式介绍"></a>SSL常用认证方式介绍</h2><ul>
+<li>单向认证</li>
+<li>双向认证</li>
+<li>CA认证<h3 id="SSL单向认证"><a href="#SSL单向认证" class="headerlink" title="SSL单向认证"></a>SSL单向认证</h3>单向认证只需客户端验证服务端，即客户端只需要认证服务端的合法性，服务端不需要。这种认证方式适用Web应用，因为web应用的用户数目广泛，且无需在通讯层对用户身份进行验证，一般都在应用逻辑层来保证用户的合法登入。但如果是企业应用对接，情况就不一样，可能会要求对客户端(相对而言)做身份验证。这时就需要做SSL双向认证。<h3 id="SSL双向认证"><a href="#SSL双向认证" class="headerlink" title="SSL双向认证"></a>SSL双向认证</h3>双向认证顾名思义，服务端也需要认证客户端的合法性，这就意味着客户端的自签名证书需要导入服务端的数字证书仓库。<br><strong>采用这种方式会不太便利，一但客户端或者服务端修改了秘钥和证书，就需要重新进行证书交换，对于调试和维护工作量非常大，并且由于agent数目不确定，动态增加agent的时候需要平台和agent双发互相加入相应各自的证书。</strong><h3 id="CA认证"><a href="#CA认证" class="headerlink" title="CA认证"></a>CA认证</h3>CA认证的好处是只要服务端和客户端只需要将CA证书导入各自的keystore，客户端和服务端只需判断这些证书是CA签名过的即可，这也是蜂鸟平台内部采用的认证方式<h2 id="生成证书"><a href="#生成证书" class="headerlink" title="生成证书"></a>生成证书</h2>openSSL的安装不是本经验案例的重点，这里不介绍<h3 id="根证书生成"><a href="#根证书生成" class="headerlink" title="根证书生成"></a>根证书生成</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout root.key –out root.crt –subj /C=CN/ST=ZheJiang/L=HangZhou/O=MyCompany/OU=GA/CN=GA –config openssl.cnf</span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+<h3 id="服务器端证书生成"><a href="#服务器端证书生成" class="headerlink" title="服务器端证书生成"></a>服务器端证书生成</h3><h4 id="服务器端秘钥对生成"><a href="#服务器端秘钥对生成" class="headerlink" title="服务器端秘钥对生成"></a>服务器端秘钥对生成</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">keytool -genkey -alias server -keypass **** -validity 1825 -keyalg RSA -keystore gateway.keystore -keysize 2048 -storepass **** -dname &quot;CN=GA, OU=GA, O=MyCompany, L=HangZhou, ST=ZheJiang, C=CN&quot;</span><br></pre></td></tr></table></figure>
+<p>keypass： 指定生成秘钥的密码<br>keystore：指定存储文件的密码，再次打开需要此密码</p>
+<h4 id="生成证书签名请求"><a href="#生成证书签名请求" class="headerlink" title="生成证书签名请求"></a>生成证书签名请求</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">keytool -certreq -alias server -keystore gateway.keystore -validity 1825 -file gateway.csr -storepass ****</span><br></pre></td></tr></table></figure>
+<h4 id="用根证书私钥进行签名"><a href="#用根证书私钥进行签名" class="headerlink" title="用根证书私钥进行签名"></a>用根证书私钥进行签名</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">openssl x509 -req -in gateway.csr -CA root.crt -CAkey root.key -CAcreateserial -out gateway.pem -days 1825 -extensions SAN -extfile san1.cnf</span><br></pre></td></tr></table></figure>
+<h3 id="导入根证书"><a href="#导入根证书" class="headerlink" title="导入根证书"></a>导入根证书</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">keytool -keystore gateway.keystore -importcert -alias CA -file root.crt -storepass **** -noprompt</span><br></pre></td></tr></table></figure>
+<h3 id="导入服务端证书"><a href="#导入服务端证书" class="headerlink" title="导入服务端证书"></a>导入服务端证书</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">keytool -keystore gateway.keystore -importcert -alias server -file gateway.pem -storepass ****</span><br></pre></td></tr></table></figure>
+<p>客户端证书生成方法与服务端基本相同，此处不再赘述，需要注意一点的是签名根证书必须是同一个</p>
+<h2 id="Netty-SSL配置"><a href="#Netty-SSL配置" class="headerlink" title="Netty SSL配置"></a>Netty SSL配置</h2><h3 id="获取SSLContext"><a href="#获取SSLContext" class="headerlink" title="获取SSLContext"></a>获取SSLContext</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br></pre></td><td class="code"><pre><span class="line">public class SslContextFactory &#123;</span><br><span class="line"></span><br><span class="line">    private static final String	PROTOCOL = &quot;TLS&quot;;</span><br><span class="line"></span><br><span class="line">    private static volatile SSLContext SERVER_CONTEXT = null;</span><br><span class="line"></span><br><span class="line">    private static final String DEFAULT_PROPERTIES = &quot;application.properties&quot;;</span><br><span class="line"></span><br><span class="line">    private static final String KEYSTORE_TYPE = &quot;server.ssl.key-store-type&quot;;</span><br><span class="line"></span><br><span class="line">    private static final String KEYSTORE_PASSWORD = &quot;gateway.ssl.key-store-password&quot;;</span><br><span class="line"></span><br><span class="line">    private static final String GATEWAY_KEYSTORE = &quot;gateway.ssl.key-store&quot;;</span><br><span class="line"></span><br><span class="line">    private SslContextFactory() &#123;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    private static void init()&#123;</span><br><span class="line">        Properties properties = null;</span><br><span class="line">        InputStream gatewayKeyStore = null;</span><br><span class="line">        InputStream gatewayTrustStore = null;</span><br><span class="line">        try &#123;</span><br><span class="line">            properties = PropertiesTool.getInstance().getProperties(DEFAULT_PROPERTIES, false);</span><br><span class="line">            //初始化keyManagerFactory</span><br><span class="line">            KeyStore ks = KeyStore.getInstance(properties.getProperty(KEYSTORE_TYPE));</span><br><span class="line">            gatewayKeyStore = new FileInputStream(properties.getProperty(GATEWAY_KEYSTORE));</span><br><span class="line">            ks.load(gatewayKeyStore, properties.getProperty(KEYSTORE_PASSWORD).toCharArray());</span><br><span class="line">            KeyManagerFactory kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());</span><br><span class="line">            kmf.init(ks, properties.getProperty(KEYSTORE_PASSWORD).toCharArray());</span><br><span class="line">			 //初始化TrustManagerFacotry</span><br><span class="line">            KeyStore ts = KeyStore.getInstance(properties.getProperty(KEYSTORE_TYPE));</span><br><span class="line">            gatewayTrustStore = new FileInputStream(properties.getProperty(GATEWAY_KEYSTORE));</span><br><span class="line">            ts.load(gatewayTrustStore, properties.getProperty(KEYSTORE_PASSWORD).toCharArray());</span><br><span class="line">            TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());</span><br><span class="line">            tmf.init(ts);</span><br><span class="line">			//生成SSLContext</span><br><span class="line">            SERVER_CONTEXT = SSLContext.getInstance(PROTOCOL);</span><br><span class="line">            SERVER_CONTEXT.init(kmf.getKeyManagers(), tmf.getTrustManagers(), null);</span><br><span class="line"></span><br><span class="line">        &#125; catch (IOException e) &#123;</span><br><span class="line">            throw new GatewayException(e.getMessage(), e);</span><br><span class="line">        &#125; catch (Exception  e) &#123;</span><br><span class="line">            throw new GatewayException(e.getMessage(), e);</span><br><span class="line">        &#125; finally &#123;</span><br><span class="line">            if (null != gatewayKeyStore) &#123;</span><br><span class="line">                try &#123;</span><br><span class="line">                    gatewayKeyStore.close();</span><br><span class="line">                &#125; catch (IOException e) &#123;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">            if (null != gatewayTrustStore) &#123;</span><br><span class="line">                try &#123;</span><br><span class="line">                    gatewayTrustStore.close();</span><br><span class="line">                &#125; catch (IOException e) &#123;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    public static SSLContext getServerContext() &#123;</span><br><span class="line">        if(SERVER_CONTEXT == null)&#123;</span><br><span class="line">            synchronized (SslContextFactory.class) &#123;</span><br><span class="line">                if (SERVER_CONTEXT == null) &#123;</span><br><span class="line">                    init();</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        return SERVER_CONTEXT;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="加入NettyHandler"><a href="#加入NettyHandler" class="headerlink" title="加入NettyHandler"></a>加入NettyHandler</h3><p>Netty 提供了一个SslHandler，主要用于加密和解密<br>在大多数情况下,SslHandler 将成为 ChannelPipeline 中的第一个 ChannelHandler 。这将确保所有其他 ChannelHandler 应用他们的逻辑到数据后加密后才发生,从而确保他们的变化是安全的。<br><img src="http://images.royliu.me/netty-ssl-config/1.jpg" alt="这里写图片描述"><br>图片来自网络<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">SSLContext sslCtx = SslContextFactory.getServerContext();</span><br><span class="line">      SSLEngine sslEngine = sslCtx.createSSLEngine();</span><br><span class="line">      //设置加密套件</span><br><span class="line">      sslEngine.setEnabledCipherSuites(Constants.CIPHER_ARRAY);</span><br><span class="line">      sslEngine.setUseClientMode(false);</span><br><span class="line">      sslEngine.setNeedClientAuth(true);</span><br><span class="line">      pipeline.addLast(&quot;SslEstablish&quot;,new SslHandler(sslEngine));</span><br></pre></td></tr></table></figure></p>
+<h3 id="Diffie-Hellman-密码过弱问题"><a href="#Diffie-Hellman-密码过弱问题" class="headerlink" title="Diffie-Hellman 密码过弱问题"></a>Diffie-Hellman 密码过弱问题</h3><p>研究人员Alex Halderman和Nadia Heninger提出NSA已经能够通过攻击1024位素数的Diffie-Hellman密钥交换算法解密大量HTTPS、SSH和VPN连接。<br>提供安全的加密算法<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">public static final String[] CIPHER_ARRAY = &#123;&quot;TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256&quot;,</span><br><span class="line">&quot;TLS_DHE_RSA_WITH_AES_128_GCM_SHA256&quot;,</span><br><span class="line">&quot;TLS_DHE_DSS_WITH_AES_128_GCM_SHA256&quot;&#125;;</span><br></pre></td></tr></table></figure></p>
+<h2 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h2><p>Netty权威指南<br><a href="https://weakdh.org/sysadmin.html" target="_blank" rel="noopener">https://weakdh.org/sysadmin.html</a></p>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/netty/" rel="tag"># netty</a>
+          
+            <a href="/tags/ssl/" rel="tag"># ssl</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2017/08/16/xss-introduction/" rel="next" title="跨站脚本攻击介绍">
+                <i class="fa fa-chevron-left"></i> 跨站脚本攻击介绍
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2017/09/02/understand-the-jvm/" rel="prev" title="深入理解java虚拟机">
+                深入理解java虚拟机 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image" src="/images/myself.jpg" alt="roy liu">
+          <p class="site-author-name" itemprop="name">roy liu</p>
+           
+              <p class="site-description motion-element" itemprop="description">keep your dream alive</p>
+          
+        </div>
+        <nav class="site-state motion-element">
+
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives/">
+                <span class="site-state-item-count">29</span>
+                <span class="site-state-item-name">日志</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-categories">
+              <a href="/categories/index.html">
+                <span class="site-state-item-count">15</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-tags">
+              <a href="/tags/index.html">
+                <span class="site-state-item-count">34</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+        </div>
+
+        
+        
+
+        
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Netty-SSL安全配置"><span class="nav-number">1.</span> <span class="nav-text">Netty SSL安全配置</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#摘要"><span class="nav-number">1.1.</span> <span class="nav-text">摘要</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#主要名词解释"><span class="nav-number">1.2.</span> <span class="nav-text">主要名词解释</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#SSL常用认证方式介绍"><span class="nav-number">1.3.</span> <span class="nav-text">SSL常用认证方式介绍</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#SSL单向认证"><span class="nav-number">1.3.1.</span> <span class="nav-text">SSL单向认证</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#SSL双向认证"><span class="nav-number">1.3.2.</span> <span class="nav-text">SSL双向认证</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#CA认证"><span class="nav-number">1.3.3.</span> <span class="nav-text">CA认证</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#生成证书"><span class="nav-number">1.4.</span> <span class="nav-text">生成证书</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#根证书生成"><span class="nav-number">1.4.1.</span> <span class="nav-text">根证书生成</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#服务器端证书生成"><span class="nav-number">1.4.2.</span> <span class="nav-text">服务器端证书生成</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#服务器端秘钥对生成"><span class="nav-number">1.4.2.1.</span> <span class="nav-text">服务器端秘钥对生成</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#生成证书签名请求"><span class="nav-number">1.4.2.2.</span> <span class="nav-text">生成证书签名请求</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#用根证书私钥进行签名"><span class="nav-number">1.4.2.3.</span> <span class="nav-text">用根证书私钥进行签名</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#导入根证书"><span class="nav-number">1.4.3.</span> <span class="nav-text">导入根证书</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#导入服务端证书"><span class="nav-number">1.4.4.</span> <span class="nav-text">导入服务端证书</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Netty-SSL配置"><span class="nav-number">1.5.</span> <span class="nav-text">Netty SSL配置</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#获取SSLContext"><span class="nav-number">1.5.1.</span> <span class="nav-text">获取SSLContext</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#加入NettyHandler"><span class="nav-number">1.5.2.</span> <span class="nav-text">加入NettyHandler</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Diffie-Hellman-密码过弱问题"><span class="nav-number">1.5.3.</span> <span class="nav-text">Diffie-Hellman 密码过弱问题</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考资料"><span class="nav-number">1.6.</span> <span class="nav-text">参考资料</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">roy liu</span>
+</div>
+
+
+<div class="powered-by">
+  由 <a class="theme-link" href="https://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Pisces
+  </a>
+</div>
+
+
+        
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.1"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.1"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.1"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.1"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.1"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.1"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.1"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

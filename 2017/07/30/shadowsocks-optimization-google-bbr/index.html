@@ -1,0 +1,809 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.1" rel="stylesheet" type="text/css">
+
+
+  <meta name="keywords" content="shadowsocks,翻墙,">
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.1">
+
+
+
+
+
+
+<meta name="description" content="转自https://www.vultr.com/docs/how-to-deploy-google-bbr-on-centos-7翻译by rou liu 上一篇介绍完了部署shadowsocks 大多数情况下已经满足需求，但是如果想看youtube高清视频或者在线直播，那就要用到接下来的方法，感谢goolgle。 什么是bbrBBR（Bottleneck Bandwidth and RTT）是一">
+<meta name="keywords" content="shadowsocks,翻墙">
+<meta property="og:type" content="article">
+<meta property="og:title" content="shadowsocks之采用google bbr算法优化">
+<meta property="og:url" content="http://yoursite.com/2017/07/30/shadowsocks-optimization-google-bbr/index.html">
+<meta property="og:site_name" content="freedom">
+<meta property="og:description" content="转自https://www.vultr.com/docs/how-to-deploy-google-bbr-on-centos-7翻译by rou liu 上一篇介绍完了部署shadowsocks 大多数情况下已经满足需求，但是如果想看youtube高清视频或者在线直播，那就要用到接下来的方法，感谢goolgle。 什么是bbrBBR（Bottleneck Bandwidth and RTT）是一">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:updated_time" content="2020-04-09T07:16:05.585Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="shadowsocks之采用google bbr算法优化">
+<meta name="twitter:description" content="转自https://www.vultr.com/docs/how-to-deploy-google-bbr-on-centos-7翻译by rou liu 上一篇介绍完了部署shadowsocks 大多数情况下已经满足需求，但是如果想看youtube高清视频或者在线直播，那就要用到接下来的方法，感谢goolgle。 什么是bbrBBR（Bottleneck Bandwidth and RTT）是一">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    sidebar: {"position":"left","display":"post","offset":12,"offset_float":0,"b2t":false,"scrollpercent":false},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2017/07/30/shadowsocks-optimization-google-bbr/">
+
+
+
+
+
+  <title>shadowsocks之采用google bbr算法优化 | freedom</title>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">freedom</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">Coding changes the world</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br>
+            
+            关于
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-commonweal">
+          <a href="/404.html" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-heartbeat"></i> <br>
+            
+            公益404
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2017/07/30/shadowsocks-optimization-google-bbr/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="roy liu">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/myself.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="freedom">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">shadowsocks之采用google bbr算法优化</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-07-30T16:58:42+08:00">
+                2017-07-30
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/实用工具/" itemprop="url" rel="index">
+                    <span itemprop="name">实用工具</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>转自<a href="https://www.vultr.com/docs/how-to-deploy-google-bbr-on-centos-7" target="_blank" rel="noopener">https://www.vultr.com/docs/how-to-deploy-google-bbr-on-centos-7</a><br>翻译by rou liu</p>
+<p>上一篇介绍完了部署shadowsocks 大多数情况下已经满足需求，但是如果想看youtube高清视频<br>或者在线直播，那就要用到接下来的方法，感谢goolgle。</p>
+<h2 id="什么是bbr"><a href="#什么是bbr" class="headerlink" title="什么是bbr"></a>什么是bbr</h2><p>BBR（Bottleneck Bandwidth and RTT）是一个新的拥塞控制算法，由谷歌贡献的Linux内核的TCP协议栈。有了BBR，Linux服务器可以得到显著提高连接的吞吐量和减少延迟。此外，它很容易部署，因为这种算法只需要在发送方更新，而不需要在网络或在接收端部署BBR。</p>
+<p>在本文中，我将向你展示如何在Vultr CentOS的7 KVM服务器实例上部署BBR。</p>
+<h2 id="前提条件"><a href="#前提条件" class="headerlink" title="前提条件"></a>前提条件</h2><ul>
+<li>一个Vultr CentOS的7 x64的服务器实例。</li>
+<li>一个sudo的用户。<a id="more"></a>
+<h2 id="升级bbr"><a href="#升级bbr" class="headerlink" title="升级bbr"></a>升级bbr</h2><h3 id="使用ELRepo-RPM库升级内核"><a href="#使用ELRepo-RPM库升级内核" class="headerlink" title="使用ELRepo RPM库升级内核"></a>使用ELRepo RPM库升级内核</h3></li>
+</ul>
+<p>为了使用BBR，你需要将你的CentOS 7机器的内核升级到4.9.0。你可以很容易得通过ELRepo RPM库中进行升级。 </p>
+<p>在升级之前，你可以看看当前的linux内核版本: </p>
+<p>uname -r  </p>
+<p>这个命令会输出类似的一个字符串:  </p>
+<p>3.10.0-514.2.2.el7.x86_64</p>
+<p>正如你看到的，目前linux的内核版本是3.10.0。</p>
+<p>安装ELRepo repo:  </p>
+<p>sudo rpm –import <a href="https://www.elrepo.org/RPM-GPG-KEY-elrepo.org" target="_blank" rel="noopener">https://www.elrepo.org/RPM-GPG-KEY-elrepo.org</a><br>sudo rpm -Uvh <a href="http://www.elrepo.org/elrepo-release-7.0-2.el7.elrepo.noarch.rpm" target="_blank" rel="noopener">http://www.elrepo.org/elrepo-release-7.0-2.el7.elrepo.noarch.rpm</a></p>
+<p>使用ELRepo安装4.9.0内核：<br>sudo yum –enablerepo=elrepo-kernel install kernel-ml -y   </p>
+<p>确认结果：<br>rpm -qa | grep kernel  </p>
+<p>如果安装成功，你应该可以看到kernel-ml-4.9.0-1.el7.elrepo.x86_64在如下输出列表中：<br>kernel-ml-4.9.0-1.el7.elrepo.x86_64<br>kernel-3.10.0-514.el7.x86_64<br>kernel-tools-libs-3.10.0-514.2.2.el7.x86_64<br>kernel-tools-3.10.0-514.2.2.el7.x86_64<br>kernel-3.10.0-514.2.2.el7.x86_64</p>
+<p>现在，你需要通过设置默认的grub2的启动项来启用4.9.0内核。</p>
+<p>显示在GRUB2菜单中的所有条目如下：<br>sudo egrep ^menuentry /etc/grub2.cfg | cut -f 2 -d \’</p>
+<p>结果应类似于：<br>CentOS Linux 7 Rescue a0cbf86a6ef1416a8812657bb4f2b860 (4.9.0-1.el7.elrepo.x86_64)<br>CentOS Linux (4.9.0-1.el7.elrepo.x86_64) 7 (Core)<br>CentOS Linux (3.10.0-514.2.2.el7.x86_64) 7 (Core)<br>CentOS Linux (3.10.0-514.el7.x86_64) 7 (Core)<br>CentOS Linux (0-rescue-bf94f46c6bd04792a6a42c91bae645f7) 7 (Core)  </p>
+<p>从0开始计数，4.9.0内核位于第二行，所以设置默认启动项为1：<br>sudo grub2-set-default 1</p>
+<p>重新启动系统：<br>sudo shutdown -r now</p>
+<p>当服务器重新上线，请重新登录并重新运行uname命令，以确认您使用的是正确的内核：<br>uname -r</p>
+<p>您应该看到如下结果：<br>4.9.0-1.el7.elrepo.x86_64</p>
+<h3 id="启用BBR"><a href="#启用BBR" class="headerlink" title="启用BBR"></a>启用BBR</h3><p>为了使BBR算法，你需要修改sysctl配置： </p>
+<pre><code class="bash"><span class="built_in">echo</span> <span class="string">'net.core.default_qdisc=fq'</span> | sudo tee -a /etc/sysctl.conf
+<span class="built_in">echo</span> <span class="string">'net.ipv4.tcp_congestion_control=bbr'</span> | sudo tee -a /etc/sysctl.conf
+sudo sysctl -p
+</code></pre>
+<p>现在，你可以使用下面的命令来确认BBR是否启用：</p>
+<pre><code class="bash">sudo sysctl net.ipv4.tcp_available_congestion_control
+</code></pre>
+<p>输出应该类似于:  </p>
+<pre><code class="bash">net.ipv4.tcp_available_congestion_control = bbr cubic reno
+</code></pre>
+<p>接下来，验证有：  </p>
+<pre><code class="bash">sudo sysctl -n net.ipv4.tcp_congestion_control
+</code></pre>
+<p>输出应该是： </p>
+<pre><code class="bash">bbr
+</code></pre>
+<p>最后，检查内核模块的加载位置:  </p>
+<pre><code class="bash">lsmod | grep bbr 
+</code></pre>
+<p>输出将类似于：  </p>
+<pre><code class="bash">tcp_bbr                16384  0
+</code></pre>
+<h2 id="可选-：测试网络性能增强"><a href="#可选-：测试网络性能增强" class="headerlink" title="(可选)：测试网络性能增强"></a>(可选)：测试网络性能增强</h2><p>为了测试BBR的网络性能的提升，你可以在Web服务器目录中的创建一个文件下载，然后从你的台式机上的浏览器测试下载速度。</p>
+<pre><code class="bash">sudo yum install httpd -y
+sudo systemctl start httpd.service
+sudo firewall-cmd --zone=public --permanent --add-service=http
+sudo firewall-cmd --reload
+<span class="built_in">cd</span> /var/www/html
+sudo dd <span class="keyword">if</span>=/dev/zero of=500mb.zip bs=1024k count=500
+</code></pre>
+<p>最后，请从您的桌面电脑上的网络浏览器访问网址http://[your-server-IP]/500mb.zip，然后评估的下载速度。</p>
+<p>就这样。谢谢您的阅读。</p>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/shadowsocks/" rel="tag"># shadowsocks</a>
+          
+            <a href="/tags/翻墙/" rel="tag"># 翻墙</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2017/07/15/hibernate-object-status/" rel="next" title="hibernate的对象状态分析">
+                <i class="fa fa-chevron-left"></i> hibernate的对象状态分析
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2017/08/14/csrf-solution/" rel="prev" title="跨站请求伪造防御">
+                跨站请求伪造防御 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image" src="/images/myself.jpg" alt="roy liu">
+          <p class="site-author-name" itemprop="name">roy liu</p>
+           
+              <p class="site-description motion-element" itemprop="description">keep your dream alive</p>
+          
+        </div>
+        <nav class="site-state motion-element">
+
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives/">
+                <span class="site-state-item-count">29</span>
+                <span class="site-state-item-name">日志</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-categories">
+              <a href="/categories/index.html">
+                <span class="site-state-item-count">15</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-tags">
+              <a href="/tags/index.html">
+                <span class="site-state-item-count">34</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+        </div>
+
+        
+        
+
+        
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#什么是bbr"><span class="nav-number">1.</span> <span class="nav-text">什么是bbr</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#前提条件"><span class="nav-number">2.</span> <span class="nav-text">前提条件</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#升级bbr"><span class="nav-number">3.</span> <span class="nav-text">升级bbr</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#使用ELRepo-RPM库升级内核"><span class="nav-number">3.1.</span> <span class="nav-text">使用ELRepo RPM库升级内核</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#启用BBR"><span class="nav-number">3.2.</span> <span class="nav-text">启用BBR</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#可选-：测试网络性能增强"><span class="nav-number">4.</span> <span class="nav-text">(可选)：测试网络性能增强</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">roy liu</span>
+</div>
+
+
+<div class="powered-by">
+  由 <a class="theme-link" href="https://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Pisces
+  </a>
+</div>
+
+
+        
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.1"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.1"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.1"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.1"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.1"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.1"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.1"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

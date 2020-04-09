@@ -1,0 +1,736 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.1" rel="stylesheet" type="text/css">
+
+
+  <meta name="keywords" content="hiberate,hashcode,">
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.1">
+
+
+
+
+
+
+<meta name="description" content="在写实体类时，经常会对域增加校验，例如@NotNull表示哪个字段不能为空，昨天晚上调试代码，就遇到了问题，123456789101112131415161718192021222324@Entitypublic class ApplicationCategory implements Serializable &amp;#123;    private static final long serialV">
+<meta name="keywords" content="hiberate,hashcode">
+<meta property="og:type" content="article">
+<meta property="og:title" content="记一次亲身踩过的hibernate的bug">
+<meta property="og:url" content="http://yoursite.com/2017/03/04/hiberate-bug-hv1013/index.html">
+<meta property="og:site_name" content="freedom">
+<meta property="og:description" content="在写实体类时，经常会对域增加校验，例如@NotNull表示哪个字段不能为空，昨天晚上调试代码，就遇到了问题，123456789101112131415161718192021222324@Entitypublic class ApplicationCategory implements Serializable &amp;#123;    private static final long serialV">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:updated_time" content="2020-04-09T07:16:05.580Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="记一次亲身踩过的hibernate的bug">
+<meta name="twitter:description" content="在写实体类时，经常会对域增加校验，例如@NotNull表示哪个字段不能为空，昨天晚上调试代码，就遇到了问题，123456789101112131415161718192021222324@Entitypublic class ApplicationCategory implements Serializable &amp;#123;    private static final long serialV">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    sidebar: {"position":"left","display":"post","offset":12,"offset_float":0,"b2t":false,"scrollpercent":false},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2017/03/04/hiberate-bug-hv1013/">
+
+
+
+
+
+  <title>记一次亲身踩过的hibernate的bug | freedom</title>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">freedom</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">Coding changes the world</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br>
+            
+            关于
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-commonweal">
+          <a href="/404.html" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-heartbeat"></i> <br>
+            
+            公益404
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2017/03/04/hiberate-bug-hv1013/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="roy liu">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/myself.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="freedom">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">记一次亲身踩过的hibernate的bug</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-03-04T17:01:47+08:00">
+                2017-03-04
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/hibernate/" itemprop="url" rel="index">
+                    <span itemprop="name">hibernate</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>在写实体类时，经常会对域增加校验，例如@NotNull表示哪个字段不能为空，昨天晚上调试代码，就遇到了问题，<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Entity</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ApplicationCategory</span> <span class="keyword">implements</span> <span class="title">Serializable</span> </span>&#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">long</span> serialVersionUID = -<span class="number">8018302345969463947L</span>;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Id</span></span><br><span class="line">    <span class="meta">@GeneratedValue</span></span><br><span class="line">    <span class="keyword">private</span> Integer id;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@NotNull</span>(message = <span class="string">"应用分类名称不能为空"</span>)</span><br><span class="line">    <span class="keyword">private</span> String name;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> String remark;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">int</span> <span class="title">hashCode</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">int</span> result = id.hashCode();</span><br><span class="line">        result = <span class="number">31</span> * result + name.hashCode();</span><br><span class="line">        result = <span class="number">31</span> * result + (remark != <span class="keyword">null</span> ? remark.hashCode() : <span class="number">0</span>);</span><br><span class="line">        <span class="keyword">return</span> result;</span><br><span class="line">    &#125;</span><br><span class="line">   .....</span><br><span class="line">   .....</span><br><span class="line">   <span class="comment">//省略其他方法</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<a id="more"></a>
+<p>程序启动，保存applicationCategory时，抛异常，错误如下：<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br></pre></td><td class="code"><pre><span class="line"><span class="number">2017</span>-<span class="number">05</span>-<span class="number">23</span> <span class="number">18</span>:<span class="number">51</span>:<span class="number">43.195</span> ERROR <span class="number">16876</span> --- [http-nio-<span class="number">65009</span>-exec-<span class="number">4</span>] o.a.c.c.C.[.[.[/].[dispatcherServlet]    : Servlet.service() <span class="keyword">for</span> servlet [dispatcherServlet] in context with path [] threw exception [Request processing failed; nested exception is javax.validation.ValidationException: HV000041: Call to TraversableResolver.isReachable() threw an exception.] with root cause</span><br><span class="line"></span><br><span class="line">java.lang.NullPointerException: <span class="keyword">null</span></span><br><span class="line">	at com.xxx.hhhh.cccc.machine.domain.ApplicationCategory.hashCode(ApplicationCategory.java:<span class="number">69</span>)</span><br><span class="line">	at org.hibernate.validator.internal.engine.resolver.CachingTraversableResolverForSingleValidation$TraversableHolder.buildHashCode(CachingTraversableResolverForSingleValidation.java:<span class="number">143</span>)</span><br><span class="line">	at org.hibernate.validator.internal.engine.resolver.CachingTraversableResolverForSingleValidation$TraversableHolder.&lt;init&gt;(CachingTraversableResolverForSingleValidation.java:<span class="number">104</span>)</span><br><span class="line">	at org.hibernate.validator.internal.engine.resolver.CachingTraversableResolverForSingleValidation$TraversableHolder.&lt;init&gt;(CachingTraversableResolverForSingleValidation.java:<span class="number">86</span>)</span><br><span class="line">	at org.hibernate.validator.internal.engine.resolver.CachingTraversableResolverForSingleValidation.isReachable(CachingTraversableResolverForSingleValidation.java:<span class="number">31</span>)</span><br><span class="line">	at org.hibernate.validator.internal.engine.ValidatorImpl.isReachable(ValidatorImpl.java:<span class="number">1612</span>)</span><br><span class="line">	at org.hibernate.validator.internal.engine.ValidatorImpl.isValidationRequired(ValidatorImpl.java:<span class="number">1597</span>)</span><br><span class="line">	at org.hibernate.validator.internal.engine.ValidatorImpl.validateMetaConstraint(ValidatorImpl.java:<span class="number">609</span>)</span><br><span class="line">	at org.hibernate.validator.internal.engine.ValidatorImpl.validateConstraint(ValidatorImpl.java:<span class="number">580</span>)</span><br><span class="line">	at org.hibernate.validator.internal.engine.ValidatorImpl.validateConstraintsForSingleDefaultGroupElement(ValidatorImpl.java:<span class="number">524</span>)</span><br><span class="line">	at org.hibernate.validator.internal.engine.ValidatorImpl.validateConstraintsForDefaultGroup(ValidatorImpl.java:<span class="number">492</span>)</span><br><span class="line">	at org.hibernate.validator.internal.engine.ValidatorImpl.validateConstraintsForCurrentGroup(ValidatorImpl.java:<span class="number">457</span>)</span><br><span class="line">	at org.hibernate.validator.internal.engine.ValidatorImpl.validateInContext(ValidatorImpl.java:<span class="number">407</span>)</span><br><span class="line">	at org.hibernate.validator.internal.engine.ValidatorImpl.validate(ValidatorImpl.java:<span class="number">205</span>)</span><br><span class="line">	at org.hibernate.cfg.beanvalidation.BeanValidationEventListener.validate(BeanValidationEventListener.java:<span class="number">114</span>)</span><br><span class="line">	at org.hibernate.cfg.beanvalidation.BeanValidationEventListener.onPreInsert(BeanValidationEventListener.java:<span class="number">78</span>)</span><br><span class="line">	at org.hibernate.action.internal.EntityIdentityInsertAction.preInsert(EntityIdentityInsertAction.java:<span class="number">197</span>)</span><br><span class="line">	at org.hibernate.action.internal.EntityIdentityInsertAction.execute(EntityIdentityInsertAction.java:<span class="number">75</span>)</span><br><span class="line">	at org.hibernate.engine.spi.ActionQueue.execute(ActionQueue.java:<span class="number">619</span>)</span><br><span class="line">	at org.hibernate.engine.spi.ActionQueue.addResolvedEntityInsertAction(ActionQueue.java:<span class="number">273</span>)</span><br><span class="line">	at org.hibernate.engine.spi.ActionQueue.addInsertAction(ActionQueue.java:<span class="number">254</span>)</span><br><span class="line">	at org.hibernate.engine.spi.ActionQueue.addAction(ActionQueue.java:<span class="number">299</span>)</span><br><span class="line">	at org.hibernate.event.internal.AbstractSaveEventListener.addInsertAction(AbstractSaveEventListener.java:<span class="number">317</span>)</span><br><span class="line">	at org.hibernate.event.internal.AbstractSaveEventListener.performSaveOrReplicate(AbstractSaveEventListener.java:<span class="number">272</span>)</span><br><span class="line">	at org.hibernate.event.internal.AbstractSaveEventListener.performSave(AbstractSaveEventListener.java:<span class="number">178</span>)</span><br><span class="line">	at org.hibernate.event.internal.AbstractSaveEventListener.saveWithGeneratedId(AbstractSaveEventListener.java:<span class="number">109</span>)</span><br><span class="line">	at org.hibernate.jpa.event.internal.core.JpaPersistEventListener.saveWithGeneratedId(JpaPersistEventListener.java:<span class="number">67</span>)</span><br><span class="line">	at org.hibernate.event.internal.DefaultPersistEventListener.entityIsTransient(DefaultPersistEventListener.java:<span class="number">189</span>)</span><br><span class="line">	at org.hibernate.event.internal.DefaultPersistEventListener.onPersist(DefaultPersistEventListener.java:<span class="number">132</span>)</span><br><span class="line">	at org.hibernate.event.internal.DefaultPersistEventListener.onPersist(DefaultPersistEventListener.java:<span class="number">58</span>)</span><br><span class="line">	at org.hibernate.internal.SessionImpl.firePersist(SessionImpl.java:<span class="number">775</span>)</span><br><span class="line">	at org.hibernate.internal.SessionImpl.persist(SessionImpl.java:<span class="number">748</span>)</span><br><span class="line">	at org.hibernate.internal.SessionImpl.persist(SessionImpl.java:<span class="number">753</span>)</span><br><span class="line">	at org.hibernate.jpa.spi.AbstractEntityManagerImpl.persist(AbstractEntityManagerImpl.java:<span class="number">1146</span>)</span><br><span class="line">	at sun.reflect.GeneratedMethodAccessor101.invoke(Unknown Source)</span><br><span class="line">	at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:<span class="number">43</span>)</span><br><span class="line">	at java.lang.reflect.Method.invoke(Method.java:<span class="number">498</span>)</span><br><span class="line">	at org.springframework.orm.jpa.ExtendedEntityManagerCreator$ExtendedEntityManagerInvocationHandler.invoke(ExtendedEntityManagerCreator.java:<span class="number">347</span>)</span><br><span class="line">	at com.sun.proxy.$Proxy113.persist(Unknown Source)</span><br><span class="line">	at sun.reflect.GeneratedMethodAccessor101.invoke(Unknown Source)</span><br><span class="line">	at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:<span class="number">43</span>)</span><br><span class="line">	at java.lang.reflect.Method.invoke(Method.java:<span class="number">498</span>)</span><br><span class="line">	at org.springframework.orm.jpa.SharedEntityManagerCreator$SharedEntityManagerInvocationHandler.invoke(SharedEntityManagerCreator.java:<span class="number">298</span>)</span><br><span class="line">	at com.sun.proxy.$Proxy113.persist(Unknown Source)</span><br><span class="line">	at org.springframework.data.jpa.repository.support.SimpleJpaRepository.save(SimpleJpaRepository.java:<span class="number">506</span>)</span><br><span class="line">	at sun.reflect.GeneratedMethodAccessor99.invoke(Unknown Source)</span><br><span class="line">	at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:<span class="number">43</span>)</span><br><span class="line">	at java.lang.reflect.Method.invoke(Method.java:<span class="number">498</span>)</span><br><span class="line">	at org.springframework.data.repository.core.support.RepositoryFactorySupport$QueryExecutorMethodInterceptor.executeMethodOn(RepositoryFactorySupport.java:<span class="number">503</span>)</span><br><span class="line">	at org.springframework.data.repository.core.support.RepositoryFactorySupport$QueryExecutorMethodInterceptor.doInvoke(RepositoryFactorySupport.java:<span class="number">488</span>)</span><br><span class="line">	at org.springframework.data.repository.core.support.RepositoryFactorySupport$QueryExecutorMethodInterceptor.invoke(RepositoryFactorySupport.java:<span class="number">460</span>)</span><br><span class="line">	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:<span class="number">179</span>)</span><br><span class="line">	at org.springframework.data.projection.DefaultMethodInvokingMethodInterceptor.invoke(DefaultMethodInvokingMethodInterceptor.java:<span class="number">61</span>)</span><br><span class="line">	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:<span class="number">179</span>)</span><br><span class="line">	at org.springframework.transaction.interceptor.TransactionInterceptor$<span class="number">1</span>.proceedWithInvocation(TransactionInterceptor.java:<span class="number">99</span>)</span><br><span class="line">	at org.springframework.transaction.interceptor.TransactionAspectSupport.invokeWithinTransaction(TransactionAspectSupport.java:<span class="number">281</span>)</span><br><span class="line">	at org.springframework.transaction.interceptor.TransactionInterceptor.invoke(TransactionInterceptor.java:<span class="number">96</span>)</span><br><span class="line">	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:<span class="number">179</span>)</span><br><span class="line">	at org.springframework.dao.support.PersistenceExceptionTranslationInterceptor.invoke(PersistenceExceptionTranslationInterceptor.java:<span class="number">136</span>)</span><br><span class="line">	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:<span class="number">179</span>)</span><br><span class="line">	at org.springframework.data.jpa.repository.support.CrudMethodMetadataPostProcessor$CrudMethodMetadataPopulatingMethodInterceptor.invoke(CrudMethodMetadataPostProcessor.java:<span class="number">133</span>)</span><br><span class="line">	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:<span class="number">179</span>)</span><br><span class="line">	at org.springframework.aop.interceptor.ExposeInvocationInterceptor.invoke(ExposeInvocationInterceptor.java:<span class="number">92</span>)</span><br><span class="line">	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:<span class="number">179</span>)</span><br><span class="line">	at org.springframework.aop.framework.JdkDynamicAopProxy.invoke(JdkDynamicAopProxy.java:<span class="number">213</span>)</span><br><span class="line">	at com.sun.proxy.$Proxy126.save(Unknown Source)</span><br><span class="line">	at com.hikvision.hummer.pandora.machine.service.impl.ApplicationCategoryServiceImpl.save(ApplicationCategoryServiceImpl.java:<span class="number">42</span>)</span><br><span class="line">	at com.hikvision.hummer.pandora.machine.service.impl.ApplicationCategoryServiceImpl$$FastClassBySpringCGLIB$$<span class="number">3748</span>b453.invoke(&lt;generated&gt;)</span><br><span class="line">	at org.springframework.cglib.proxy.MethodProxy.invoke(MethodProxy.java:<span class="number">204</span>)</span><br><span class="line">	at org.springframework.aop.framework.CglibAopProxy$CglibMethodInvocation.invokeJoinpoint(CglibAopProxy.java:<span class="number">720</span>)</span><br><span class="line">	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:<span class="number">157</span>)</span><br><span class="line">	at org.springframework.transaction.interceptor.TransactionInterceptor$<span class="number">1</span>.proceedWithInvocation(TransactionInterceptor.java:<span class="number">99</span>)</span><br><span class="line">	at org.springframework.transaction.interceptor.TransactionAspectSupport.invokeWithinTransaction(TransactionAspectSupport.java:<span class="number">281</span>)</span><br><span class="line">	at org.springframework.transaction.interceptor.TransactionInterceptor.invoke(TransactionInterceptor.java:<span class="number">96</span>)</span><br><span class="line">	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:<span class="number">179</span>)</span><br><span class="line">	at org.springframework.aop.framework.CglibAopProxy$DynamicAdvisedInterceptor.intercept(CglibAopProxy.java:<span class="number">655</span>)</span><br><span class="line">	at com.hikvision.hummer.pandora.machine.service.impl.ApplicationCategoryServiceImpl$$EnhancerBySpringCGLIB$$<span class="number">2</span>a6d0df9.save(&lt;generated&gt;)</span><br><span class="line">	at com.hikvision.hummer.pandora.controller.machine.MachineController.writeTestData1(MachineController.java:<span class="number">155</span>)</span><br><span class="line">	at com.hikvision.hummer.pandora.controller.machine.MachineController.doTest(MachineController.java:<span class="number">123</span>)</span><br><span class="line">	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)</span><br><span class="line">	at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:<span class="number">62</span>)</span><br><span class="line">	at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:<span class="number">43</span>)</span><br><span class="line">	at java.lang.reflect.Method.invoke(Method.java:<span class="number">498</span>)</span><br><span class="line">	at org.springframework.web.method.support.InvocableHandlerMethod.doInvoke(InvocableHandlerMethod.java:<span class="number">221</span>)</span><br><span class="line">	at org.springframework.web.method.support.InvocableHandlerMethod.invokeForRequest(InvocableHandlerMethod.java:<span class="number">136</span>)</span><br><span class="line">	at org.springframework.web.servlet.mvc.method.annotation.ServletInvocableHandlerMethod.invokeAndHandle(ServletInvocableHandlerMethod.java:<span class="number">114</span>)</span><br><span class="line">	at org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter.invokeHandlerMethod(RequestMappingHandlerAdapter.java:<span class="number">827</span>)</span><br><span class="line">	at org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter.handleInternal(RequestMappingHandlerAdapter.java:<span class="number">738</span>)</span><br><span class="line">	at org.springframework.web.servlet.mvc.method.AbstractHandlerMethodAdapter.handle(AbstractHandlerMethodAdapter.java:<span class="number">85</span>)</span><br><span class="line">	at org.springframework.web.servlet.DispatcherServlet.doDispatch(DispatcherServlet.java:<span class="number">963</span>)</span><br><span class="line">	at org.springframework.web.servlet.DispatcherServlet.doService(DispatcherServlet.java:<span class="number">897</span>)</span><br><span class="line">	at org.springframework.web.servlet.FrameworkServlet.processRequest(FrameworkServlet.java:<span class="number">970</span>)</span><br><span class="line">	at org.springframework.web.servlet.FrameworkServlet.doGet(FrameworkServlet.java:<span class="number">861</span>)</span><br><span class="line">	at javax.servlet.http.HttpServlet.service(HttpServlet.java:<span class="number">622</span>)</span><br><span class="line">	at org.springframework.web.servlet.FrameworkServlet.service(FrameworkServlet.java:<span class="number">846</span>)</span><br><span class="line">	at javax.servlet.http.HttpServlet.service(HttpServlet.java:<span class="number">729</span>)</span><br><span class="line">	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:<span class="number">230</span>)</span><br><span class="line">	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:<span class="number">165</span>)</span><br><span class="line">	at org.apache.tomcat.websocket.server.WsFilter.doFilter(WsFilter.java:<span class="number">52</span>)</span><br><span class="line">	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:<span class="number">192</span>)</span><br><span class="line">	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:<span class="number">165</span>)</span><br><span class="line">	at org.springframework.web.filter.RequestContextFilter.doFilterInternal(RequestContextFilter.java:<span class="number">99</span>)</span><br><span class="line">	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:<span class="number">107</span>)</span><br><span class="line">	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:<span class="number">192</span>)</span><br><span class="line">	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:<span class="number">165</span>)</span><br><span class="line">	at org.springframework.web.filter.HttpPutFormContentFilter.doFilterInternal(HttpPutFormContentFilter.java:<span class="number">89</span>)</span><br><span class="line">	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:<span class="number">107</span>)</span><br><span class="line">	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:<span class="number">192</span>)</span><br><span class="line">	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:<span class="number">165</span>)</span><br><span class="line">	at org.springframework.web.filter.HiddenHttpMethodFilter.doFilterInternal(HiddenHttpMethodFilter.java:<span class="number">77</span>)</span><br><span class="line">	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:<span class="number">107</span>)</span><br><span class="line">	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:<span class="number">192</span>)</span><br><span class="line">	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:<span class="number">165</span>)</span><br><span class="line">	at org.springframework.web.filter.CharacterEncodingFilter.doFilterInternal(CharacterEncodingFilter.java:<span class="number">197</span>)</span><br><span class="line">	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:<span class="number">107</span>)</span><br><span class="line">	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:<span class="number">192</span>)</span><br><span class="line">	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:<span class="number">165</span>)</span><br><span class="line">	at org.apache.catalina.core.StandardWrapperValve.invoke(StandardWrapperValve.java:<span class="number">198</span>)</span><br><span class="line">	at org.apache.catalina.core.StandardContextValve.invoke(StandardContextValve.java:<span class="number">108</span>)</span><br><span class="line">	at org.apache.catalina.authenticator.AuthenticatorBase.invoke(AuthenticatorBase.java:<span class="number">472</span>)</span><br><span class="line">	at org.apache.catalina.core.StandardHostValve.invoke(StandardHostValve.java:<span class="number">140</span>)</span><br><span class="line">	at org.apache.catalina.valves.ErrorReportValve.invoke(ErrorReportValve.java:<span class="number">79</span>)</span><br><span class="line">	at org.apache.catalina.core.StandardEngineValve.invoke(StandardEngineValve.java:<span class="number">87</span>)</span><br><span class="line">	at org.apache.catalina.connector.CoyoteAdapter.service(CoyoteAdapter.java:<span class="number">349</span>)</span><br><span class="line">	at org.apache.coyote.http11.Http11Processor.service(Http11Processor.java:<span class="number">784</span>)</span><br><span class="line">	at org.apache.coyote.AbstractProcessorLight.process(AbstractProcessorLight.java:<span class="number">66</span>)</span><br><span class="line">	at org.apache.coyote.AbstractProtocol$ConnectionHandler.process(AbstractProtocol.java:<span class="number">802</span>)</span><br><span class="line">	at org.apache.tomcat.util.net.NioEndpoint$SocketProcessor.doRun(NioEndpoint.java:<span class="number">1410</span>)</span><br><span class="line">	at org.apache.tomcat.util.net.SocketProcessorBase.run(SocketProcessorBase.java:<span class="number">49</span>)</span><br><span class="line">	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:<span class="number">1142</span>)</span><br><span class="line">	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:<span class="number">617</span>)</span><br><span class="line">	at org.apache.tomcat.util.threads.TaskThread$WrappingRunnable.run(TaskThread.java:<span class="number">61</span>)</span><br><span class="line">	at java.lang.Thread.run(Thread.java:<span class="number">745</span>)</span><br></pre></td></tr></table></figure></p>
+<p>检查一下看到是validation报错，但是自己的变量的确已经赋值，并且提示hashCode代码有问题，但是我的代码都是IDE帮生成的，即使hashCode有问题，validation也不应该去调用此方法啊，@NotNull作用不是检查字段是否为空么，把@NotNull去掉或者换成@Column(nullable=false)就没问题。</p>
+<p>在stackoverflow上找了答案<a href="https://stackoverflow.com/questions/30333779/javax-validation-validationexception-hv000041-call-to-traversableresolver-isre" target="_blank" rel="noopener">https://stackoverflow.com/questions/30333779/javax-validation-validationexception-hv000041-call-to-traversableresolver-isre</a>，发现正好有一位仁兄遇到相同的问题，有评论指出hashcode有问题，但是在save时，有的域对象确实为空，例如Integer Id，是数据库生成的，在save时肯定为null，但究竟是谁在save时调用了hashCode方法。</p>
+<p>看到下面另外一条评论，也坚定了我的想法，这是hibernate的一个bug; 下面的又指出这是hibernate bug HV_1013，<a href="https://hibernate.atlassian.net/browse/HV-1013" target="_blank" rel="noopener">https://hibernate.atlassian.net/browse/HV-1013</a>,在 5.3.0.CR1.修复.</p>
+<p>看一下官方是怎么说的<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">A couple of comments.</span><br><span class="line">SingleThreadCachedTraversableResolver (or CachingTraversableResolverForSingleValidation as it is called in later</span><br><span class="line">versions of Validator is there to speed up TraversableResolver calls by caching calls to <span class="keyword">this</span> <span class="class"><span class="keyword">class</span> <span class="title">during</span> <span class="title">a</span> <span class="title">single</span></span></span><br><span class="line"><span class="class"><span class="title">validation</span> <span class="title">call</span>. <span class="title">How</span> <span class="title">much</span> <span class="title">this</span> <span class="title">really</span> <span class="title">improves</span> <span class="title">the</span> <span class="title">performance</span> <span class="title">is</span> <span class="title">a</span> <span class="title">good</span> <span class="title">question</span>. <span class="title">This</span> <span class="title">caching</span> <span class="title">approach</span> <span class="title">has</span> <span class="title">been</span></span></span><br><span class="line"><span class="class"><span class="title">around</span> <span class="title">since</span> <span class="title">Validator</span> 4 <span class="title">and</span> <span class="title">it</span> <span class="title">might</span> <span class="title">be</span> <span class="title">worth</span> <span class="title">checking</span> <span class="title">the</span> <span class="title">actual</span> <span class="title">benefit</span> <span class="title">of</span> <span class="title">this</span> <span class="title">implementation</span>.</span></span><br><span class="line"><span class="class"></span></span><br><span class="line"><span class="class"><span class="title">Secondly</span>, <span class="title">I</span> <span class="title">was</span> <span class="title">about</span> <span class="title">to</span> <span class="title">suggest</span> <span class="title">that</span> <span class="title">you</span> <span class="title">can</span> <span class="title">always</span> <span class="title">plugin</span> <span class="title">your</span> <span class="title">own</span> <span class="title">implementation</span> <span class="title">of</span> <span class="title">a</span> <span class="title">TraversableResolver</span> <span class="title">in</span></span></span><br><span class="line"><span class="class"><span class="title">case</span> <span class="title">you</span> <span class="title">want</span> <span class="title">to</span> <span class="title">bypass</span> <span class="title">CachingTraversableResolverForSingleValidation</span>, <span class="title">but</span> <span class="title">I</span> <span class="title">actually</span> <span class="title">think</span> <span class="title">we</span> <span class="title">wrap</span> <span class="title">any</span> <span class="title">configured</span></span></span><br><span class="line"><span class="class"><span class="title">TraversableResolver</span> <span class="title">into</span> <span class="title">this</span> <span class="title">caching</span> <span class="title">one</span>. <span class="title">There</span> <span class="title">I</span> <span class="title">think</span> <span class="title">it</span> <span class="title">would</span> <span class="title">be</span> <span class="title">beneficial</span> <span class="title">to</span> <span class="title">provide</span> <span class="title">a</span> <span class="title">configuration</span> </span></span><br><span class="line"><span class="class"><span class="title">property</span> <span class="title">which</span> <span class="title">allows</span> <span class="title">to</span> <span class="title">bypass</span> <span class="title">the</span> <span class="title">caching</span>.</span></span><br><span class="line"><span class="class"></span></span><br><span class="line"><span class="class"><span class="title">Last</span> <span class="title">but</span> <span class="title">not</span> <span class="title">least</span>, <span class="title">regardless</span> <span class="title">of</span> <span class="title">any</span> <span class="title">potential</span> <span class="title">changes</span> <span class="title">in</span> <span class="title">Validator</span>, <span class="title">I</span> <span class="title">suggest</span> <span class="title">to</span> <span class="title">change</span> <span class="title">your</span> <span class="title">hashCode</span> </span></span><br><span class="line"><span class="class"><span class="title">implementation</span> <span class="title">to</span> <span class="title">take</span> <span class="title">into</span> <span class="title">account</span> <span class="title">potential</span> <span class="title">null</span> <span class="title">values</span>. <span class="title">What</span> <span class="title">if</span> <span class="title">you</span> <span class="title">are</span> <span class="title">going</span> <span class="title">to</span> <span class="title">use</span> <span class="title">an</span> <span class="title">instance</span> <span class="title">of</span> <span class="title">your</span> <span class="title">class</span></span></span><br><span class="line"><span class="class"><span class="title">in</span> <span class="title">a</span> <span class="title">Collection</span> <span class="title">or</span> <span class="title">Map</span> <span class="title">or</span> <span class="title">something</span> <span class="title">similar</span>. <span class="title">You</span> <span class="title">will</span> <span class="title">get</span> <span class="title">exceptions</span> <span class="title">in</span> <span class="title">this</span> <span class="title">case</span> <span class="title">as</span> <span class="title">well</span>. <span class="title">Bean</span> <span class="title">Validation</span> <span class="title">occurs</span></span></span><br><span class="line"><span class="class"><span class="title">at</span> <span class="title">given</span> <span class="title">life</span> <span class="title">cycle</span> <span class="title">events</span>, <span class="title">for</span> <span class="title">example</span> <span class="title">in</span> <span class="title">the</span> <span class="title">case</span> <span class="title">of</span> <span class="title">JPA</span> <span class="title">during</span> <span class="title">pre</span>-<span class="title">persist</span>. <span class="title">This</span> <span class="title">means</span> <span class="title">that</span> <span class="title">until</span> <span class="title">you</span> <span class="title">call</span> </span></span><br><span class="line"><span class="class"><span class="title">persist</span> <span class="title">followed</span> <span class="title">by</span> <span class="title">a</span> <span class="title">explicit</span> <span class="title">flush</span> <span class="title">or</span> <span class="title">transaction</span> <span class="title">commit</span>, <span class="title">your</span> <span class="title">entity</span> <span class="title">will</span> <span class="title">be</span> <span class="title">un</span>-<span class="title">validated</span>. <span class="title">What</span> <span class="title">if</span> <span class="title">your</span> <span class="title">entity</span></span></span><br><span class="line"><span class="class"><span class="title">is</span> <span class="title">used</span> <span class="title">in</span> <span class="title">a</span> <span class="title">one</span> <span class="title">to</span> <span class="title">many</span> <span class="title">relation</span> <span class="title">ship</span>. <span class="title">Again</span> <span class="title">you</span> <span class="title">would</span> <span class="title">get</span> <span class="title">exceptions</span> <span class="title">while</span> <span class="title">still</span> <span class="title">assembling</span> <span class="title">your</span> <span class="title">final</span> <span class="title">object</span> </span></span><br><span class="line"><span class="class"><span class="title">graph</span> <span class="title">to</span> <span class="title">persist</span>. <span class="title">IMO</span> <span class="title">hashCode</span> <span class="title">must</span> <span class="title">deal</span> <span class="title">with</span> <span class="title">potentially</span> <span class="title">null</span> <span class="title">values</span> <span class="title">if</span> <span class="title">it</span> <span class="title">is</span> <span class="title">possible</span> <span class="title">that</span> <span class="title">an</span> <span class="title">instance</span> <span class="title">can</span> <span class="title">exist</span></span></span><br><span class="line"><span class="class"><span class="title">in</span> <span class="title">a</span> <span class="title">state</span> <span class="title">where</span> <span class="title">the</span> <span class="title">value</span> <span class="title">is</span> <span class="title">null</span> (<span class="title">even</span> <span class="title">if</span> <span class="title">from</span> <span class="title">a</span> <span class="title">business</span> <span class="title">point</span> <span class="title">of</span> <span class="title">view</span> <span class="title">the</span> <span class="title">field</span> <span class="title">is</span> <span class="title">mandatory</span>).</span></span><br></pre></td></tr></table></figure></p>
+<p>三条观点，</p>
+<p>为什么会调用hashCode 大体意思是好像加快什么，提升性能, 官方已承认是bug，在后面的版本进行了修改。</p>
+<p>对TraversalbeResolver自己实现</p>
+<p>最后一条，完善hashCode，因为自身带码本身就有潜在的空值</p>
+<p>采用了最后一条，将hashCode重写 如下<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line">   <span class="function"><span class="keyword">public</span> <span class="keyword">int</span> <span class="title">hashCode</span><span class="params">()</span> </span>&#123;</span><br><span class="line">       <span class="keyword">int</span> result = id != <span class="keyword">null</span> ? id.hashCode() : <span class="number">0</span>;</span><br><span class="line">       result = <span class="number">31</span> * result + (name != <span class="keyword">null</span> ? name.hashCode() : <span class="number">0</span>);</span><br><span class="line">       result = <span class="number">31</span> * result + (remark != <span class="keyword">null</span> ? remark.hashCode() : <span class="number">0</span>);</span><br><span class="line">       <span class="keyword">return</span> result;</span><br><span class="line">   &#125;</span><br></pre></td></tr></table></figure></p>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/hiberate/" rel="tag"># hiberate</a>
+          
+            <a href="/tags/hashcode/" rel="tag"># hashcode</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2016/12/08/websocket-httpsession/" rel="next" title="webscoket实战之利用httpsession定向推送">
+                <i class="fa fa-chevron-left"></i> webscoket实战之利用httpsession定向推送
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2017/04/13/quartz2-x-code-analyse-startprocess/" rel="prev" title="quartz2.x源码分析——启动过程">
+                quartz2.x源码分析——启动过程 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+
+      <section class="site-overview sidebar-panel sidebar-panel-active">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image" src="/images/myself.jpg" alt="roy liu">
+          <p class="site-author-name" itemprop="name">roy liu</p>
+           
+              <p class="site-description motion-element" itemprop="description">keep your dream alive</p>
+          
+        </div>
+        <nav class="site-state motion-element">
+
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives/">
+                <span class="site-state-item-count">29</span>
+                <span class="site-state-item-name">日志</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-categories">
+              <a href="/categories/index.html">
+                <span class="site-state-item-count">15</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-tags">
+              <a href="/tags/index.html">
+                <span class="site-state-item-count">34</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+        </div>
+
+        
+        
+
+        
+        
+
+        
+
+
+      </section>
+
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">roy liu</span>
+</div>
+
+
+<div class="powered-by">
+  由 <a class="theme-link" href="https://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Pisces
+  </a>
+</div>
+
+
+        
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.1"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.1"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.1"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.1"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.1"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.1"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.1"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

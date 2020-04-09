@@ -1,0 +1,766 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.1" rel="stylesheet" type="text/css">
+
+
+  <meta name="keywords" content="c++,sqlite3,性能测试,">
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.1">
+
+
+
+
+
+
+<meta name="description" content="Sqlite3常用的插入方法及性能测试最近在做一个大数据量缓存重传系统的优化，其中用到的sqlite技术，把自己的学习心得整理了一下。   SQLite，是一款轻型的数据库，是遵守ACID的关系型数据库管理系统，它包含在一个相对小的C库中。同时能够跟很多程序语言相结合，比如 Tcl、C#、PHP、Java等，还有ODBC接口，同样比起Mysql、PostgreSQL这两款开源的世界著名数据库管理系">
+<meta name="keywords" content="c++,sqlite3,性能测试">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Sqlite3常用的插入方法及性能测试">
+<meta property="og:url" content="http://yoursite.com/2015/10/20/sqlite3-insert-perform-test/index.html">
+<meta property="og:site_name" content="freedom">
+<meta property="og:description" content="Sqlite3常用的插入方法及性能测试最近在做一个大数据量缓存重传系统的优化，其中用到的sqlite技术，把自己的学习心得整理了一下。   SQLite，是一款轻型的数据库，是遵守ACID的关系型数据库管理系统，它包含在一个相对小的C库中。同时能够跟很多程序语言相结合，比如 Tcl、C#、PHP、Java等，还有ODBC接口，同样比起Mysql、PostgreSQL这两款开源的世界著名数据库管理系">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="http://images.royliu.me/sqlite3-insert-perform-test/1.jpg">
+<meta property="og:image" content="http://images.royliu.me/sqlite3-insert-perform-test/2.jpg">
+<meta property="og:image" content="http://images.royliu.me/sqlite3-insert-perform-test/3.jpg">
+<meta property="og:image" content="http://images.royliu.me/sqlite3-insert-perform-test/4.jpg">
+<meta property="og:image" content="http://images.royliu.me/sqlite3-insert-perform-test/5.jpg">
+<meta property="og:image" content="http://images.royliu.me/sqlite3-insert-perform-test/6.jpg">
+<meta property="og:image" content="http://images.royliu.me/sqlite3-insert-perform-test/7.jpg">
+<meta property="og:updated_time" content="2020-04-09T07:16:05.586Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Sqlite3常用的插入方法及性能测试">
+<meta name="twitter:description" content="Sqlite3常用的插入方法及性能测试最近在做一个大数据量缓存重传系统的优化，其中用到的sqlite技术，把自己的学习心得整理了一下。   SQLite，是一款轻型的数据库，是遵守ACID的关系型数据库管理系统，它包含在一个相对小的C库中。同时能够跟很多程序语言相结合，比如 Tcl、C#、PHP、Java等，还有ODBC接口，同样比起Mysql、PostgreSQL这两款开源的世界著名数据库管理系">
+<meta name="twitter:image" content="http://images.royliu.me/sqlite3-insert-perform-test/1.jpg">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    sidebar: {"position":"left","display":"post","offset":12,"offset_float":0,"b2t":false,"scrollpercent":false},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2015/10/20/sqlite3-insert-perform-test/">
+
+
+
+
+
+  <title>Sqlite3常用的插入方法及性能测试 | freedom</title>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">freedom</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">Coding changes the world</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br>
+            
+            关于
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-commonweal">
+          <a href="/404.html" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-heartbeat"></i> <br>
+            
+            公益404
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2015/10/20/sqlite3-insert-perform-test/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="roy liu">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/myself.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="freedom">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Sqlite3常用的插入方法及性能测试</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2015-10-20T22:34:45+08:00">
+                2015-10-20
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/sqlite3/" itemprop="url" rel="index">
+                    <span itemprop="name">sqlite3</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="Sqlite3常用的插入方法及性能测试"><a href="#Sqlite3常用的插入方法及性能测试" class="headerlink" title="Sqlite3常用的插入方法及性能测试"></a>Sqlite3常用的插入方法及性能测试</h1><p>最近在做一个大数据量缓存重传系统的优化，其中用到的sqlite技术，把自己的学习心得整理了一下。  </p>
+<p>SQLite，是一款轻型的数据库，是遵守ACID的关系型数据库管理系统，它包含在一个相对小的C库中。同时能够跟很多程序语言相结合，比如 Tcl、C#、PHP、Java等，还有ODBC接口，同样比起Mysql、PostgreSQL这两款开源的世界著名数据库管理系统来讲，它的处理速度比他们都快。SQLite数据库由于其简单、灵活、轻量、开源，已经被越来越多的被应用到中小型应用中。因此在许多软件中例如(QQ，微信)等许多软件中都有广泛应用。<br><img src="http://images.royliu.me/sqlite3-insert-perform-test/1.jpg" alt="这里写图片描述"><br><img src="http://images.royliu.me/sqlite3-insert-perform-test/2.jpg" alt="这里写图片描述"></p>
+<h2 id="慢插入-暴力插入"><a href="#慢插入-暴力插入" class="headerlink" title="慢插入-暴力插入"></a>慢插入-暴力插入</h2><p><img src="http://images.royliu.me/sqlite3-insert-perform-test/3.jpg" alt="这里写图片描述"><br><a id="more"></a><br>调用sqlite3_exec()函数，会隐式地开启了一个事务，其次，sqlite3_exec() 是sqlite3_perpare()，sqlite3_step()，  sqlite3_finalize()的一个结合，每调用一次这个函数，就会重复的执行这三条语句，对于相同的语句，其中sqlite3_perpare相当于编译sql语句，如果语句相同且重复操作，就会增加很多重复操作。如果插入一条数据，就调该函数一次，事务就会被反复地开启、关闭，会增大IO量。所以当大批量数据插入时，此方法简直无法忍受。</p>
+<h2 id="事务插入-显示的开启事务"><a href="#事务插入-显示的开启事务" class="headerlink" title="事务插入-显示的开启事务"></a>事务插入-显示的开启事务</h2><p><img src="http://images.royliu.me/sqlite3-insert-perform-test/4.jpg" alt="这里写图片描述"><br>所谓”事务“就是指一组SQL命令，这些命令要么一起执行，要么都不被执行。如果在插入数据前显式开启事务，插入后再一起提交，则会大大提高IO效率，进而加数据快插入速度。</p>
+<h2 id="同步关闭模式-synchronous-OFF"><a href="#同步关闭模式-synchronous-OFF" class="headerlink" title="同步关闭模式-synchronous = OFF"></a>同步关闭模式-synchronous = OFF</h2><p><img src="http://images.royliu.me/sqlite3-insert-perform-test/5.jpg" alt="这里写图片描述"><br>当synchronous设置为FULL, SQLite数据库引擎在紧急时刻会暂停以确定数据已经写入磁盘。这使系统崩溃或电源出问题时能确保数据库在重起后不会损坏。FULL synchronous很安全但很慢。<br>当synchronous设置为NORMAL, SQLite数据库引擎在大部分紧急时刻会暂停，但不像FULL模式下那么频繁。 NORMAL模式下有很小的几率(但不是不存在)发生电源故障导致数据库损坏的情况。但实际上，在这种情况 下很可能你的硬盘已经不能使用，或者发生了其他的不可恢复的硬件错误。<br>当设置为synchronous OFF时，SQLite在传递数据给系统以后直接继续而不暂停。若运行SQLite的应用程序崩溃， 数据不会损伤，但在系统崩溃或写入数据时意外断电的情况下数据库可能会损坏。另一方面，在synchronous OFF时 一些操作可能会快50倍甚至更多。在SQLite 2中，缺省值为NORMAL.而在3中修改为FULL。</p>
+<h2 id="预处理（执行前准备）-sqlite3-prepare-v2"><a href="#预处理（执行前准备）-sqlite3-prepare-v2" class="headerlink" title="预处理（执行前准备）-sqlite3_prepare_v2"></a>预处理（执行前准备）-sqlite3_prepare_v2</h2><p><img src="http://images.royliu.me/sqlite3-insert-perform-test/6.jpg" alt="这里写图片描述"><br>此方法就是“执行准备”（类似于存储过程）操作，即先将SQL语句编译好，然后再一步一步（或一行一行）地执行。如果采用前者的话，就算开起了事务，SQLite仍然要对循环中每一句SQL语句进行“词法分析”和“语法分析”，这对于同时插入大量数据的操作来说，简直就是浪费时间。因此，要进一步提高插入效率的话，就应该使用此方法</p>
+<h2 id="测试结果展示"><a href="#测试结果展示" class="headerlink" title="测试结果展示"></a>测试结果展示</h2><p><img src="http://images.royliu.me/sqlite3-insert-perform-test/7.jpg" alt="这里写图片描述"></p>
+<h2 id="测试源代码"><a href="#测试源代码" class="headerlink" title="测试源代码"></a>测试源代码</h2><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">extern</span> <span class="string">"C"</span></span><br><span class="line">&#123;</span><br><span class="line">	<span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">"sqlite3.h"</span></span></span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span><span class="meta-string">&lt;sstream&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;string&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;iostream&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;stdlib.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;ctime&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span><span class="meta-string">&lt;windows.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> MAX_TEST_COUNT 200</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">using</span> <span class="keyword">namespace</span> <span class="built_in">std</span>;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="keyword">char</span> cmdCreatTable[<span class="number">256</span>] = <span class="string">"create table SqliteTest (id integer , x integer , y integer, weight real)"</span> ;</span><br><span class="line">	sqlite3* db = <span class="literal">NULL</span>;</span><br><span class="line">	<span class="keyword">char</span> * errorMessage = <span class="literal">NULL</span>;</span><br><span class="line">	<span class="keyword">int</span> iResult = sqlite3_open(<span class="string">"SqliteTest.db"</span>, &amp;db);</span><br><span class="line">	<span class="keyword">do</span></span><br><span class="line">	&#123;</span><br><span class="line">		<span class="keyword">if</span> (SQLITE_OK != iResult)</span><br><span class="line">		&#123;</span><br><span class="line">			<span class="built_in">cout</span>&lt;&lt;<span class="string">"创建InsertTest.db文件失败"</span>&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line">			<span class="keyword">break</span>;</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		sqlite3_exec(db,<span class="string">"drop table if exists SqliteTest"</span>,<span class="number">0</span>,<span class="number">0</span>,<span class="number">0</span>);  </span><br><span class="line"></span><br><span class="line">		iResult = sqlite3_exec(db, cmdCreatTable, <span class="literal">NULL</span>, <span class="literal">NULL</span>, &amp;errorMessage);</span><br><span class="line">		<span class="keyword">if</span> (SQLITE_OK != iResult)</span><br><span class="line">		&#123;</span><br><span class="line">			<span class="built_in">cout</span>&lt;&lt;<span class="string">"创建表SqliteTest失败"</span>&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line">			<span class="keyword">break</span>;</span><br><span class="line">		&#125;</span><br><span class="line">		DWORD timeStart;</span><br><span class="line">		DWORD timeStop;</span><br><span class="line">		timeStart = GetTickCount();</span><br><span class="line">		<span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i&lt; MAX_TEST_COUNT; ++i)</span><br><span class="line">		&#123;</span><br><span class="line">			<span class="built_in">stringstream</span> ssm;  </span><br><span class="line">			ssm&lt;&lt;<span class="string">"insert into SqliteTest values("</span>&lt;&lt;i&lt;&lt;<span class="string">","</span>&lt;&lt;i*<span class="number">2</span>&lt;&lt;<span class="string">","</span>&lt;&lt;i/<span class="number">2</span>&lt;&lt;<span class="string">","</span>&lt;&lt;i*i&lt;&lt;<span class="string">")"</span>; </span><br><span class="line">		    iResult = sqlite3_exec(db,ssm.str().c_str(),<span class="number">0</span>,<span class="number">0</span>,<span class="number">0</span>); </span><br><span class="line">		&#125;</span><br><span class="line">		timeStop = GetTickCount();</span><br><span class="line">		<span class="built_in">cout</span>&lt;&lt; <span class="string">"直接Insert"</span>&lt;&lt;MAX_TEST_COUNT&lt;&lt;<span class="string">"条数据操作执行时间"</span> &lt;&lt; timeStart&lt;&lt;<span class="string">"结束时间:"</span>&lt;&lt;timeStop&lt;&lt;<span class="string">"共耗时:"</span>&lt;&lt;timeStop-timeStart&lt;&lt;<span class="string">"ms"</span>&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line"></span><br><span class="line">		timeStart = GetTickCount();</span><br><span class="line">		sqlite3_exec(db,<span class="string">"PRAGMA synchronous = OFF; "</span>,<span class="number">0</span>,<span class="number">0</span>,<span class="number">0</span>);   </span><br><span class="line">		<span class="keyword">for</span>(<span class="keyword">int</span> i = MAX_TEST_COUNT; i &lt; MAX_TEST_COUNT*<span class="number">2</span>; ++i)  </span><br><span class="line">		&#123;  </span><br><span class="line">			<span class="built_in">stringstream</span> ssm;  </span><br><span class="line">			ssm&lt;&lt;<span class="string">"insert into SqliteTest values("</span>&lt;&lt;i&lt;&lt;<span class="string">","</span>&lt;&lt;i*<span class="number">2</span>&lt;&lt;<span class="string">","</span>&lt;&lt;i/<span class="number">2</span>&lt;&lt;<span class="string">","</span>&lt;&lt;i*i&lt;&lt;<span class="string">")"</span>;  </span><br><span class="line">			sqlite3_exec(db,ssm.str().c_str(),<span class="number">0</span>,<span class="number">0</span>,<span class="number">0</span>);  </span><br><span class="line">		&#125; </span><br><span class="line">		timeStop = GetTickCount();</span><br><span class="line"></span><br><span class="line">		<span class="built_in">cout</span>&lt;&lt; <span class="string">"同步写关闭+直接Insert"</span>&lt;&lt;MAX_TEST_COUNT&lt;&lt;<span class="string">"条数据操作执行时间"</span> &lt;&lt; timeStart&lt;&lt;<span class="string">"结束时间:"</span>&lt;&lt;timeStop&lt;&lt;<span class="string">"共耗时:"</span>&lt;&lt;timeStop-timeStart&lt;&lt;<span class="string">"ms"</span>&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">		timeStart = GetTickCount();</span><br><span class="line">		sqlite3_exec(db,<span class="string">"PRAGMA synchronous = FULL; "</span>,<span class="number">0</span>,<span class="number">0</span>,<span class="number">0</span>); </span><br><span class="line">		sqlite3_exec(db,<span class="string">"begin;"</span>,<span class="number">0</span>,<span class="number">0</span>,<span class="number">0</span>);  </span><br><span class="line">		<span class="keyword">for</span>(<span class="keyword">int</span> i= MAX_TEST_COUNT*<span class="number">2</span>; i&lt; MAX_TEST_COUNT*<span class="number">3</span>; ++i)  </span><br><span class="line">		&#123;  </span><br><span class="line">			<span class="built_in">stringstream</span> ssm;  </span><br><span class="line">			ssm&lt;&lt;<span class="string">"insert into SqliteTest values("</span>&lt;&lt;i&lt;&lt;<span class="string">","</span>&lt;&lt;i*<span class="number">2</span>&lt;&lt;<span class="string">","</span>&lt;&lt;i/<span class="number">2</span>&lt;&lt;<span class="string">","</span>&lt;&lt;i*i&lt;&lt;<span class="string">")"</span>;  </span><br><span class="line">			sqlite3_exec(db,ssm.str().c_str(),<span class="number">0</span>,<span class="number">0</span>,<span class="number">0</span>);  </span><br><span class="line">		&#125;  </span><br><span class="line">		sqlite3_exec(db,<span class="string">"commit;"</span>,<span class="number">0</span>,<span class="number">0</span>,<span class="number">0</span>); </span><br><span class="line">		timeStop = GetTickCount();</span><br><span class="line">		<span class="built_in">cout</span>&lt;&lt; <span class="string">"事务Insert"</span>&lt;&lt;MAX_TEST_COUNT&lt;&lt;<span class="string">"条数据操作执行时间"</span>&lt;&lt; timeStart&lt;&lt;<span class="string">"结束时间:"</span>&lt;&lt;timeStop&lt;&lt;<span class="string">"共耗时:"</span>&lt;&lt;timeStop-timeStart&lt;&lt;<span class="string">"ms"</span>&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">        timeStart = GetTickCount();</span><br><span class="line">		sqlite3_exec(db,<span class="string">"PRAGMA synchronous = OFF; "</span>,<span class="number">0</span>,<span class="number">0</span>,<span class="number">0</span>);  </span><br><span class="line">		sqlite3_exec(db,<span class="string">"begin;"</span>,<span class="number">0</span>,<span class="number">0</span>,<span class="number">0</span>);  </span><br><span class="line">		<span class="keyword">for</span>(<span class="keyword">int</span> i = MAX_TEST_COUNT*<span class="number">3</span>; i &lt; MAX_TEST_COUNT*<span class="number">4</span>; ++i)  </span><br><span class="line">		&#123;  </span><br><span class="line">			<span class="built_in">stringstream</span> ssm;  </span><br><span class="line">			ssm&lt;&lt;<span class="string">"insert into SqliteTest values("</span>&lt;&lt;i&lt;&lt;<span class="string">","</span>&lt;&lt;i*<span class="number">2</span>&lt;&lt;<span class="string">","</span>&lt;&lt;i/<span class="number">2</span>&lt;&lt;<span class="string">","</span>&lt;&lt;i*i&lt;&lt;<span class="string">")"</span>;  </span><br><span class="line">			sqlite3_exec(db,ssm.str().c_str(),<span class="number">0</span>,<span class="number">0</span>,<span class="number">0</span>);  </span><br><span class="line">		&#125;  </span><br><span class="line">		sqlite3_exec(db,<span class="string">"commit;"</span>,<span class="number">0</span>,<span class="number">0</span>,<span class="number">0</span>); </span><br><span class="line">		timeStop = GetTickCount();</span><br><span class="line"></span><br><span class="line">		<span class="built_in">cout</span>&lt;&lt; <span class="string">"事务+同步写关闭Insert"</span>&lt;&lt;MAX_TEST_COUNT&lt;&lt;<span class="string">"条数据操作执行时间"</span> &lt;&lt; timeStart&lt;&lt;<span class="string">"结束时间:"</span>&lt;&lt;timeStop&lt;&lt;<span class="string">"共耗时:"</span>&lt;&lt;timeStop-timeStart&lt;&lt;<span class="string">"ms"</span>&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line"></span><br><span class="line">		timeStart = GetTickCount();</span><br><span class="line">		<span class="comment">//sqlite3_exec(db,"PRAGMA synchronous = FULL; ",0,0,0); </span></span><br><span class="line">		sqlite3_exec(db,<span class="string">"begin;"</span>,<span class="number">0</span>,<span class="number">0</span>,<span class="number">0</span>);  </span><br><span class="line">		sqlite3_stmt *stmt;  </span><br><span class="line">		<span class="keyword">const</span> <span class="keyword">char</span>* sql = <span class="string">"insert into SqliteTest values(?,?,?,?)"</span>;  </span><br><span class="line">	    sqlite3_prepare(db,sql,<span class="built_in">strlen</span>(sql),&amp;stmt,<span class="number">0</span>);  </span><br><span class="line">		<span class="keyword">for</span>(<span class="keyword">int</span> i = MAX_TEST_COUNT*<span class="number">4</span>; i&lt;MAX_TEST_COUNT*<span class="number">5</span>; ++i)  </span><br><span class="line">		&#123;         </span><br><span class="line">			sqlite3_reset(stmt);  </span><br><span class="line">		    sqlite3_bind_int(stmt,<span class="number">1</span>,i);  </span><br><span class="line">		    sqlite3_bind_int(stmt,<span class="number">2</span>,i*<span class="number">2</span>);  </span><br><span class="line">		    sqlite3_bind_int(stmt,<span class="number">3</span>,i/<span class="number">2</span>);  </span><br><span class="line">			sqlite3_bind_double(stmt,<span class="number">4</span>,i*i);  </span><br><span class="line">			sqlite3_step(stmt); </span><br><span class="line">		 &#125;  </span><br><span class="line">		 sqlite3_finalize(stmt);  </span><br><span class="line">		 sqlite3_exec(db,<span class="string">"commit;"</span>,<span class="number">0</span>,<span class="number">0</span>,<span class="number">0</span>);  </span><br><span class="line"></span><br><span class="line">		 timeStop = GetTickCount();</span><br><span class="line">		 <span class="built_in">cout</span>&lt;&lt; <span class="string">"事务+执行准备+同步写关闭Insert"</span>&lt;&lt;MAX_TEST_COUNT&lt;&lt;<span class="string">"条数据操作执行时间:"</span>&lt;&lt; timeStart&lt;&lt;<span class="string">"结束时间:"</span>&lt;&lt;timeStop&lt;&lt;<span class="string">"共耗时:"</span>&lt;&lt;timeStop-timeStart&lt;&lt;<span class="string">"ms"</span>&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">	&#125;<span class="keyword">while</span>(<span class="number">0</span>);</span><br><span class="line"></span><br><span class="line">	<span class="built_in">cout</span>&lt;&lt;<span class="string">"插入测试结束"</span>&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line">	Sleep(<span class="number">2000</span>);</span><br><span class="line">	sqlite3_close(db);</span><br><span class="line">	system(<span class="string">"pause"</span>);</span><br><span class="line">	</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/c/" rel="tag"># c++</a>
+          
+            <a href="/tags/sqlite3/" rel="tag"># sqlite3</a>
+          
+            <a href="/tags/性能测试/" rel="tag"># 性能测试</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2015/08/18/sqlite3-store-pic/" rel="next" title="sqlite3的图片的（二进制数据）存取操作">
+                <i class="fa fa-chevron-left"></i> sqlite3的图片的（二进制数据）存取操作
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2015/12/18/lan-multicast/" rel="prev" title="C++实现局域网IP多播">
+                C++实现局域网IP多播 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image" src="/images/myself.jpg" alt="roy liu">
+          <p class="site-author-name" itemprop="name">roy liu</p>
+           
+              <p class="site-description motion-element" itemprop="description">keep your dream alive</p>
+          
+        </div>
+        <nav class="site-state motion-element">
+
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives/">
+                <span class="site-state-item-count">29</span>
+                <span class="site-state-item-name">日志</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-categories">
+              <a href="/categories/index.html">
+                <span class="site-state-item-count">15</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-tags">
+              <a href="/tags/index.html">
+                <span class="site-state-item-count">34</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+        </div>
+
+        
+        
+
+        
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Sqlite3常用的插入方法及性能测试"><span class="nav-number">1.</span> <span class="nav-text">Sqlite3常用的插入方法及性能测试</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#慢插入-暴力插入"><span class="nav-number">1.1.</span> <span class="nav-text">慢插入-暴力插入</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#事务插入-显示的开启事务"><span class="nav-number">1.2.</span> <span class="nav-text">事务插入-显示的开启事务</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#同步关闭模式-synchronous-OFF"><span class="nav-number">1.3.</span> <span class="nav-text">同步关闭模式-synchronous = OFF</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#预处理（执行前准备）-sqlite3-prepare-v2"><span class="nav-number">1.4.</span> <span class="nav-text">预处理（执行前准备）-sqlite3_prepare_v2</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#测试结果展示"><span class="nav-number">1.5.</span> <span class="nav-text">测试结果展示</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#测试源代码"><span class="nav-number">1.6.</span> <span class="nav-text">测试源代码</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">roy liu</span>
+</div>
+
+
+<div class="powered-by">
+  由 <a class="theme-link" href="https://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Pisces
+  </a>
+</div>
+
+
+        
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.1"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.1"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.1"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.1"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.1"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.1"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.1"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

@@ -1,0 +1,765 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.1" rel="stylesheet" type="text/css">
+
+
+  <meta name="keywords" content="websocket,">
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.1">
+
+
+
+
+
+
+<meta name="description" content="开发框架 springMVC tomcat8  问题描述后端建立websocket 前端连接上来，后台会主动推送agent脚本执行信息，由于采用netty框架，保证并发性，执行的结果是多线程处理的，通过websocket返回前端居然报错了，很是费解。症状见下图。">
+<meta name="keywords" content="websocket">
+<meta property="og:type" content="article">
+<meta property="og:title" content="websocket多线程问题">
+<meta property="og:url" content="http://yoursite.com/2017/06/28/websocket-multithread-problem/index.html">
+<meta property="og:site_name" content="freedom">
+<meta property="og:description" content="开发框架 springMVC tomcat8  问题描述后端建立websocket 前端连接上来，后台会主动推送agent脚本执行信息，由于采用netty框架，保证并发性，执行的结果是多线程处理的，通过websocket返回前端居然报错了，很是费解。症状见下图。">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="http://images.royliu.me/websocket-multithread-problem/1.jpg">
+<meta property="og:image" content="http://images.royliu.me/websocket-multithread-problem/2.jpg">
+<meta property="og:image" content="http://images.royliu.me/websocket-multithread-problem/3.jpg">
+<meta property="og:updated_time" content="2020-04-09T07:16:05.587Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="websocket多线程问题">
+<meta name="twitter:description" content="开发框架 springMVC tomcat8  问题描述后端建立websocket 前端连接上来，后台会主动推送agent脚本执行信息，由于采用netty框架，保证并发性，执行的结果是多线程处理的，通过websocket返回前端居然报错了，很是费解。症状见下图。">
+<meta name="twitter:image" content="http://images.royliu.me/websocket-multithread-problem/1.jpg">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    sidebar: {"position":"left","display":"post","offset":12,"offset_float":0,"b2t":false,"scrollpercent":false},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2017/06/28/websocket-multithread-problem/">
+
+
+
+
+
+  <title>websocket多线程问题 | freedom</title>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">freedom</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">Coding changes the world</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br>
+            
+            关于
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-commonweal">
+          <a href="/404.html" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-heartbeat"></i> <br>
+            
+            公益404
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2017/06/28/websocket-multithread-problem/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="roy liu">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/myself.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="freedom">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">websocket多线程问题</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-06-28T11:21:24+08:00">
+                2017-06-28
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/websocket/" itemprop="url" rel="index">
+                    <span itemprop="name">websocket</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h2 id="开发框架"><a href="#开发框架" class="headerlink" title="开发框架"></a>开发框架</h2><ul>
+<li>springMVC</li>
+<li>tomcat8</li>
+</ul>
+<h2 id="问题描述"><a href="#问题描述" class="headerlink" title="问题描述"></a>问题描述</h2><p>后端建立websocket 前端连接上来，后台会主动推送agent脚本执行信息，由于采用netty框架，保证并发性，执行的结果是多线程处理的，通过websocket返回前端居然报错了，很是费解。症状见下图。<br><img src="http://images.royliu.me/websocket-multithread-problem/1.jpg" alt><br><img src="http://images.royliu.me/websocket-multithread-problem/2.jpg" alt><br><a id="more"></a></p>
+<h2 id="排查解决过程"><a href="#排查解决过程" class="headerlink" title="排查解决过程"></a>排查解决过程</h2><p>从图中可以看出，远端处于【TEXT_PARTIAL_WRITING】状态，就这这个关键字google（不得不说就英文搜索而言，google强太多），<br>最后发现，tomcat的websocket没有相关的多线程处理，有人在apache上提bug，可以看一下开发者给的回复：<br><a href="https://bz.apache.org/bugzilla/show_bug.cgi?id=56026" target="_blank" rel="noopener">tomcat8 websocker bug</a></p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">I have some sympathy with this view. Given that the Javadoc for RemoteEndpoint.Basic explicitly states that  </span><br><span class="line">concurrent attempts to send messages are not allowed and the Javadoc for RemoteEndpoint.Async doesn't, you'd be  </span><br><span class="line">forgiven for thinking that meant that RemoteEndpoint.Async permitted concurrent attempts to send messages.  </span><br><span class="line">Unfortunately, the (not very well documented) intention of the WebSocket EG was not to allow concurrent attempts to send messages. [1]  </span><br><span class="line"></span><br><span class="line">I did take a quick look at adding an option to relax (i.e. ignoring) this but the change required to do this with the current Tomcat code would be far from trivial.  </span><br><span class="line"></span><br><span class="line">I'm marking this as INVALID since the intention of the EG was to not allow this but WONTFIX is almost as appropriate if this is viewed as an enhancement request.</span><br><span class="line">As an aside, one reason not to implement this particular enhancement is that apps that depended on it would not be portable between containers.</span><br></pre></td></tr></table></figure>
+<h3 id="提bug的人提出了一个很常见的需求："><a href="#提bug的人提出了一个很常见的需求：" class="headerlink" title="提bug的人提出了一个很常见的需求："></a>提bug的人提出了一个很常见的需求：</h3><p>一个简单的聊天应用程序与3个用户聊天将导致并发调用Async.sendText（）当A和B都发送一个必须传递到C的消息，所以用例是很常见的。<br>应用程序担心同步或排队并发调用Async.sendText（）会对执行并发写入的应用程序造成巨大的负担，我相信这不是JSR 356的意图（尽管规范并没有说明并发保证） 。</p>
+<h3 id="tomcat-开发者大致认为"><a href="#tomcat-开发者大致认为" class="headerlink" title="tomcat 开发者大致认为"></a>tomcat 开发者大致认为</h3><p>javaDoc，RemoteEndpoint.Basic明确指出不允许并发发送消息，但是RemoteEndpoint.Async没有，并且websocket eg 的意图是不允许并发，最终结论将此bug定位为无效bug</p>
+<h2 id="解决方法"><a href="#解决方法" class="headerlink" title="解决方法"></a>解决方法</h2><p>看下面的评论也是很有意思，哈哈，大部分人认为容器应该为应用程序开发者提供便利，提供容器内部的缓冲，，而不是程序开发者自己管理websocket Session缓冲区。有一个方法是利用同步来降低这种问题的出现频率，与此同时，Tyrus 1.5是安全的，貌似只有tomcat存在这个问题。</p>
+<h2 id="随之而来的新的问题"><a href="#随之而来的新的问题" class="headerlink" title="随之而来的新的问题"></a>随之而来的新的问题</h2><p>采用同步操作之后，由于agent会有很多中间结果，当第一条消息到来把锁抢占之后，后面的结果已经到来，当锁释放之后，其他线程抢占锁，尼玛，原先有时间顺序的结果变得混乱无序.  难道真的要自己实现一套缓冲队列吗。左思右想，最终决定还是有公平锁好了 </p>
+<p>公平锁是个好东西，自己内部实现了一套等待队列，虽然效率有点低，但是对业务来说可以满足需求</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="keyword">static</span> ReentrantLock lock = <span class="keyword">new</span> ReentrantLock(<span class="keyword">true</span>);</span><br></pre></td></tr></table></figure>
+<p><img src="http://images.royliu.me/websocket-multithread-problem/3.jpg" alt></p>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/websocket/" rel="tag"># websocket</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2017/06/26/quartz-operate-api/" rel="next" title="quartz-operate-api">
+                <i class="fa fa-chevron-left"></i> quartz-operate-api
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2017/07/15/hibernate-object-status/" rel="prev" title="hibernate的对象状态分析">
+                hibernate的对象状态分析 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image" src="/images/myself.jpg" alt="roy liu">
+          <p class="site-author-name" itemprop="name">roy liu</p>
+           
+              <p class="site-description motion-element" itemprop="description">keep your dream alive</p>
+          
+        </div>
+        <nav class="site-state motion-element">
+
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives/">
+                <span class="site-state-item-count">29</span>
+                <span class="site-state-item-name">日志</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-categories">
+              <a href="/categories/index.html">
+                <span class="site-state-item-count">15</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-tags">
+              <a href="/tags/index.html">
+                <span class="site-state-item-count">34</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+        </div>
+
+        
+        
+
+        
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#开发框架"><span class="nav-number">1.</span> <span class="nav-text">开发框架</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#问题描述"><span class="nav-number">2.</span> <span class="nav-text">问题描述</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#排查解决过程"><span class="nav-number">3.</span> <span class="nav-text">排查解决过程</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#提bug的人提出了一个很常见的需求："><span class="nav-number">3.1.</span> <span class="nav-text">提bug的人提出了一个很常见的需求：</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#tomcat-开发者大致认为"><span class="nav-number">3.2.</span> <span class="nav-text">tomcat 开发者大致认为</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#解决方法"><span class="nav-number">4.</span> <span class="nav-text">解决方法</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#随之而来的新的问题"><span class="nav-number">5.</span> <span class="nav-text">随之而来的新的问题</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">roy liu</span>
+</div>
+
+
+<div class="powered-by">
+  由 <a class="theme-link" href="https://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Pisces
+  </a>
+</div>
+
+
+        
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.1"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.1"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.1"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.1"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.1"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.1"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.1"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

@@ -1,0 +1,783 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.1" rel="stylesheet" type="text/css">
+
+
+  <meta name="keywords" content="csrf,">
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.1">
+
+
+
+
+
+
+<meta name="description" content="开发相关 jdk1.8 springmvc 扫描软件 Acunetix WVS背景最近安全问题越来越多，公司软件也面临出海，刚开始公司软件大部分部在公安内网，安全问题没有太多重视。最近买了安全公司的扫描软件，一扫扫出很多安全问题，其中有一个是跨站请求伪造问题。  常见的攻击模式">
+<meta name="keywords" content="csrf">
+<meta property="og:type" content="article">
+<meta property="og:title" content="跨站请求伪造防御">
+<meta property="og:url" content="http://yoursite.com/2017/08/14/csrf-solution/index.html">
+<meta property="og:site_name" content="freedom">
+<meta property="og:description" content="开发相关 jdk1.8 springmvc 扫描软件 Acunetix WVS背景最近安全问题越来越多，公司软件也面临出海，刚开始公司软件大部分部在公安内网，安全问题没有太多重视。最近买了安全公司的扫描软件，一扫扫出很多安全问题，其中有一个是跨站请求伪造问题。  常见的攻击模式">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="http://images.royliu.me/csrf-solution/1.jpg">
+<meta property="og:updated_time" content="2020-04-09T07:16:05.578Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="跨站请求伪造防御">
+<meta name="twitter:description" content="开发相关 jdk1.8 springmvc 扫描软件 Acunetix WVS背景最近安全问题越来越多，公司软件也面临出海，刚开始公司软件大部分部在公安内网，安全问题没有太多重视。最近买了安全公司的扫描软件，一扫扫出很多安全问题，其中有一个是跨站请求伪造问题。  常见的攻击模式">
+<meta name="twitter:image" content="http://images.royliu.me/csrf-solution/1.jpg">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    sidebar: {"position":"left","display":"post","offset":12,"offset_float":0,"b2t":false,"scrollpercent":false},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2017/08/14/csrf-solution/">
+
+
+
+
+
+  <title>跨站请求伪造防御 | freedom</title>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">freedom</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">Coding changes the world</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br>
+            
+            关于
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-commonweal">
+          <a href="/404.html" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-heartbeat"></i> <br>
+            
+            公益404
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2017/08/14/csrf-solution/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="roy liu">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/myself.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="freedom">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">跨站请求伪造防御</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-08-14T16:22:41+08:00">
+                2017-08-14
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/网络安全/" itemprop="url" rel="index">
+                    <span itemprop="name">网络安全</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h2 id="开发相关"><a href="#开发相关" class="headerlink" title="开发相关"></a>开发相关</h2><ul>
+<li>jdk1.8</li>
+<li>springmvc</li>
+<li>扫描软件 Acunetix WVS<h2 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h2>最近安全问题越来越多，公司软件也面临出海，刚开始公司软件大部分部在公安内网，安全问题没有太多重视。最近买了安全公司的扫描软件，一扫扫出很多安全问题，其中有一个是跨站请求伪造问题。</li>
+</ul>
+<h2 id="常见的攻击模式"><a href="#常见的攻击模式" class="headerlink" title="常见的攻击模式"></a>常见的攻击模式</h2><a id="more"></a>
+<h3 id="GET请求利用"><a href="#GET请求利用" class="headerlink" title="GET请求利用"></a>GET请求利用</h3><h3 id="案例二"><a href="#案例二" class="headerlink" title="案例二"></a>案例二</h3><p>使用GET请求方式的利用是最简单的一种利用方式，其隐患的来源主要是由于在开发系统的时候没有按照HTTP动词的正确使用方式来使用造成的。对于GET请求来说，它所发起的请求应该是只读的，不允许对网站的任何内容进行修改。</p>
+<p>但是事实上并不是如此，很多网站在开发的时候，研发人员错误的认为GET/POST的使用区别仅仅是在于发送请求的数据是在Body中还是在请求地址中，以及请求内容的大小不同。对于一些危险的操作比如删除文章，用户授权等允许使用GET方式发送请求，在请求参数中加上文章或者用户的ID，这样就造成了只要请求地址被调用，数据就会产生修改。<br>现在假设攻击者（用户ID=121）想将自己的身份添加为网站的管理员，前提是网站使用get方法修改资源，他在网站A上面发了一个帖子，里面包含一张图片，其地址为 <em><a href="http://a.com/user/grant_super_user/121" target="_blank" rel="noopener">http://a.com/user/grant_super_user/121</a></em><br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&lt;img src=&quot;http://a.com/user/grant_super_user/121&quot; /&gt;</span><br></pre></td></tr></table></figure></p>
+<p>设想管理员看到这个帖子的时候（之所以必须是网站管理员看到，因为增加管理员可能只有admin有这个权限），这个图片肯定会自动加载显示的。于是在管理员不知情的情况下，一个赋予用户管理员权限的操作已经悄悄的以他的身份执行了。这时候攻击者121就获取到了网站的管理员权限。</p>
+<h3 id="POST请求利用"><a href="#POST请求利用" class="headerlink" title="POST请求利用"></a>POST请求利用</h3><p>相对于GET方式的利用，POST方式的利用更加复杂一些，难度也大了一些。攻击者需要建立一个钓鱼网站，伪造一个表单来发送POST请求。例如首先通过xss拿到你的cookie并链接到钓鱼网站，此时你刚刚登录被攻击网站，session还在，通过诱导你进入钓鱼网站，然后用吸引眼球的文字和图片，诱导你点击一个按钮，向被攻击网站发起post。<br><figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">&lt;script&gt;</span><br><span class="line">$(<span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">    $(<span class="string">'#CSRF_forCSRFm'</span>).trigger(<span class="string">'submit'</span>);</span><br><span class="line">&#125;);</span><br><span class="line">&lt;<span class="regexp">/script&gt;</span></span><br><span class="line"><span class="regexp">&lt;form action="http:/</span><span class="regexp">/a.com/u</span>ser/grant_super_user<span class="string">" id="</span>CSRF_form<span class="string">" method="</span>post<span class="string">"&gt;</span></span><br><span class="line"><span class="string">    &lt;input name="</span>uid<span class="string">" value="</span><span class="number">121</span><span class="string">" type="</span>hidden<span class="string">"&gt;</span></span><br><span class="line"><span class="string">&lt;/form&gt;</span></span><br></pre></td></tr></table></figure></p>
+<p>只要想办法实现用户访问的时候自动提交表单就可以了。</p>
+<h3 id="网上的方案"><a href="#网上的方案" class="headerlink" title="网上的方案"></a>网上的方案</h3><ul>
+<li>验证 HTTP Referer 字段</li>
+<li>在请求地址中添加 token 并验证</li>
+<li>在 HTTP 头中自定义属性并验证 </li>
+</ul>
+<h2 id="三种方案优缺点"><a href="#三种方案优缺点" class="headerlink" title="三种方案优缺点"></a>三种方案优缺点</h2><h3 id="验证-HTTP-Referer-字段"><a href="#验证-HTTP-Referer-字段" class="headerlink" title="验证 HTTP Referer 字段"></a>验证 HTTP Referer 字段</h3><ul>
+<li>容易篡改，低版本浏览器不安全，隐私软件可能禁用referer</li>
+<li>公司软件没有域名，无法针对域名进行过滤</li>
+</ul>
+<h3 id="在请求地址-参数中添加token并验证"><a href="#在请求地址-参数中添加token并验证" class="headerlink" title="在请求地址/参数中添加token并验证"></a>在请求地址/参数中添加token并验证</h3><ul>
+<li>改动接口较多</li>
+<li>难以保证token本身安全性</li>
+</ul>
+<h3 id="在HTTP-头中自定义属性并验证"><a href="#在HTTP-头中自定义属性并验证" class="headerlink" title="在HTTP 头中自定义属性并验证"></a>在HTTP 头中自定义属性并验证</h3><ul>
+<li>改动很大 几乎要重写网站</li>
+</ul>
+<h2 id="自己的方案"><a href="#自己的方案" class="headerlink" title="自己的方案"></a>自己的方案</h2><p>由于写代码的时候post get使用比较规范，get方法用于获取资源，没有对后台数据修改的，所以扫描的问题绝大多数在post表单提交<br>针对扫描软件的扫描报告，跨站脚本攻击都是由form表单提交的接口发起</p>
+<p>为了能减少对代码的修改，采用注解加拦截器的方式，这样做的好处是通过拦截器和注解，对特定方法做出一致性处理，减少代码量<br>具体流程图如下</p>
+<p><img src="http://images.royliu.me/csrf-solution/1.jpg" alt="这里写图片描述"></p>
+<h3 id="关键代码CSRFInterceptor"><a href="#关键代码CSRFInterceptor" class="headerlink" title="关键代码CSRFInterceptor"></a>关键代码CSRFInterceptor</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">CSRFInterceptor</span> <span class="keyword">implements</span> <span class="title">HandlerInterceptor</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> Logger logger = LoggerFactory.getLogger(CSRFInterceptor.class);</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">preHandle</span><span class="params">(HttpServletRequest request, HttpServletResponse response, Object handler)</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">        HandlerMethod handlerMethod = (HandlerMethod)handler;</span><br><span class="line">        Method method = handlerMethod.getMethod();</span><br><span class="line">        VerifyCSRFToken annotation = method.getAnnotation(VerifyCSRFToken.class);</span><br><span class="line">        <span class="keyword">if</span> (annotation != <span class="keyword">null</span> &amp;&amp; annotation.verify()) &#123;</span><br><span class="line">            String token = (String)request.getParameter(Constants.CSRF_TOKEN);</span><br><span class="line">            <span class="keyword">if</span> (token == <span class="keyword">null</span> || !token.equals(request.getSession(<span class="keyword">true</span>).getAttribute(Constants.CSRF_TOKEN))) &#123;</span><br><span class="line">                RestResult restResult = <span class="keyword">new</span> RestResult(<span class="keyword">false</span>, <span class="string">"CSRF Token Verify fail"</span>);</span><br><span class="line">                restResult.putError(<span class="string">"message"</span> ,<span class="string">"CSRF Token 验证失败，请刷新页面"</span>);</span><br><span class="line">                response.setContentType(<span class="string">"text/html; charset=UTF-8"</span>);</span><br><span class="line">                response.setCharacterEncoding(<span class="string">"UTF-8"</span>);</span><br><span class="line">                response.getWriter().append(JsonUtlis.getJsonUtlis().object2String(restResult));</span><br><span class="line">                <span class="keyword">return</span> <span class="keyword">false</span>;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">true</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">postHandle</span><span class="params">(HttpServletRequest request, HttpServletResponse response, Object handler, ModelAndView modelAndView)</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">afterCompletion</span><span class="params">(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex)</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="关键代码VerifyCSRFToken"><a href="#关键代码VerifyCSRFToken" class="headerlink" title="关键代码VerifyCSRFToken"></a>关键代码VerifyCSRFToken</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Target</span>(ElementType.METHOD)</span><br><span class="line"><span class="meta">@Retention</span>(RetentionPolicy.RUNTIME)</span><br><span class="line"><span class="keyword">public</span> <span class="meta">@interface</span> VerifyCSRFToken &#123;</span><br><span class="line">    <span class="function"><span class="keyword">boolean</span> <span class="title">verify</span><span class="params">()</span> <span class="keyword">default</span> <span class="keyword">true</span></span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="关键代码Controller"><a href="#关键代码Controller" class="headerlink" title="关键代码Controller"></a>关键代码Controller</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ScriptController</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> ObjectMapper mapper = <span class="keyword">new</span> ObjectMapper();</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> Logger logger = LoggerFactory.getLogger(ScriptController.class);</span><br><span class="line"></span><br><span class="line">    <span class="meta">@GetMapping</span>(value = <span class="string">""</span>)</span><br><span class="line">    <span class="function"><span class="keyword">public</span> String <span class="title">indexView</span><span class="params">(HttpServletRequest request, Model model)</span> </span>&#123;</span><br><span class="line">        model.addAttribute(Constants.CSRF_TOKEN, request.getSession(<span class="keyword">false</span>).getAttribute(Constants.CSRF_TOKEN));</span><br><span class="line">        <span class="keyword">return</span> <span class="string">"script/script"</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">	<span class="meta">@PostMapping</span>(value = <span class="string">"/upload"</span>)</span><br><span class="line">    <span class="meta">@VerifyCSRFToken</span></span><br><span class="line">    <span class="keyword">public</span> <span class="meta">@ResponseBody</span> <span class="function">RestResult <span class="title">uploadScript</span><span class="params">(@RequestParam(<span class="string">"file"</span>)</span>MultipartFile file, String type, 	HttpServletResponse response)</span>&#123;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+<p>参考资料<br><a href="https://www.ibm.com/developerworks/cn/web/1102_niugang_csrf/" target="_blank" rel="noopener">https://www.ibm.com/developerworks/cn/web/1102_niugang_csrf/</a><br><a href="https://segmentfault.com/a/1190000008505616" target="_blank" rel="noopener">https://segmentfault.com/a/1190000008505616</a><br><a href="http://blog.csdn.net/jrn1012/article/details/52750883" target="_blank" rel="noopener">http://blog.csdn.net/jrn1012/article/details/52750883</a><br><a href="http://book.51cto.com/art/201102/245185.htm" target="_blank" rel="noopener">http://book.51cto.com/art/201102/245185.htm</a></p>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/csrf/" rel="tag"># csrf</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2017/07/30/shadowsocks-optimization-google-bbr/" rel="next" title="shadowsocks之采用google bbr算法优化">
+                <i class="fa fa-chevron-left"></i> shadowsocks之采用google bbr算法优化
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2017/08/16/ssl-Diffie-hellman-weak/" rel="prev" title="ssl Diffie-Hellman弱密码问题">
+                ssl Diffie-Hellman弱密码问题 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image" src="/images/myself.jpg" alt="roy liu">
+          <p class="site-author-name" itemprop="name">roy liu</p>
+           
+              <p class="site-description motion-element" itemprop="description">keep your dream alive</p>
+          
+        </div>
+        <nav class="site-state motion-element">
+
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives/">
+                <span class="site-state-item-count">29</span>
+                <span class="site-state-item-name">日志</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-categories">
+              <a href="/categories/index.html">
+                <span class="site-state-item-count">15</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-tags">
+              <a href="/tags/index.html">
+                <span class="site-state-item-count">34</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+        </div>
+
+        
+        
+
+        
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#开发相关"><span class="nav-number">1.</span> <span class="nav-text">开发相关</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#背景"><span class="nav-number">2.</span> <span class="nav-text">背景</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#常见的攻击模式"><span class="nav-number">3.</span> <span class="nav-text">常见的攻击模式</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#GET请求利用"><span class="nav-number">3.1.</span> <span class="nav-text">GET请求利用</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#案例二"><span class="nav-number">3.2.</span> <span class="nav-text">案例二</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#POST请求利用"><span class="nav-number">3.3.</span> <span class="nav-text">POST请求利用</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#网上的方案"><span class="nav-number">3.4.</span> <span class="nav-text">网上的方案</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#三种方案优缺点"><span class="nav-number">4.</span> <span class="nav-text">三种方案优缺点</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#验证-HTTP-Referer-字段"><span class="nav-number">4.1.</span> <span class="nav-text">验证 HTTP Referer 字段</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#在请求地址-参数中添加token并验证"><span class="nav-number">4.2.</span> <span class="nav-text">在请求地址/参数中添加token并验证</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#在HTTP-头中自定义属性并验证"><span class="nav-number">4.3.</span> <span class="nav-text">在HTTP 头中自定义属性并验证</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#自己的方案"><span class="nav-number">5.</span> <span class="nav-text">自己的方案</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#关键代码CSRFInterceptor"><span class="nav-number">5.1.</span> <span class="nav-text">关键代码CSRFInterceptor</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#关键代码VerifyCSRFToken"><span class="nav-number">5.2.</span> <span class="nav-text">关键代码VerifyCSRFToken</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#关键代码Controller"><span class="nav-number">5.3.</span> <span class="nav-text">关键代码Controller</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">roy liu</span>
+</div>
+
+
+<div class="powered-by">
+  由 <a class="theme-link" href="https://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Pisces
+  </a>
+</div>
+
+
+        
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.1"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.1"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.1"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.1"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.1"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.1"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.1"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

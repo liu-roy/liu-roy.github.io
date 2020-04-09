@@ -1,0 +1,769 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.1" rel="stylesheet" type="text/css">
+
+
+  <meta name="keywords" content="hiberate-objectState,">
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.1">
+
+
+
+
+
+
+<meta name="description" content="开发框架 springMVC hibernate5.0.1hibernate三种状态Hibernate定义并支持下列对象状态(state):  临时状态(Transient)当new一个实体对象后, 这个对象处于临时状态, 即这个对象只是一个保存临时数据的内存区域, 如果没有变量引用这个对象, 则会被jre垃圾回收机制回收. 这个对象所保存的数据与数据库没有任何关系, 除非通过Session的sa">
+<meta name="keywords" content="hiberate-objectState">
+<meta property="og:type" content="article">
+<meta property="og:title" content="hibernate的对象状态分析">
+<meta property="og:url" content="http://yoursite.com/2017/07/15/hibernate-object-status/index.html">
+<meta property="og:site_name" content="freedom">
+<meta property="og:description" content="开发框架 springMVC hibernate5.0.1hibernate三种状态Hibernate定义并支持下列对象状态(state):  临时状态(Transient)当new一个实体对象后, 这个对象处于临时状态, 即这个对象只是一个保存临时数据的内存区域, 如果没有变量引用这个对象, 则会被jre垃圾回收机制回收. 这个对象所保存的数据与数据库没有任何关系, 除非通过Session的sa">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="http://images.royliu.me/hibernate-object-status/1.jpg">
+<meta property="og:image" content="http://images.royliu.me/hibernate-object-status/2.jpg">
+<meta property="og:image" content="http://images.royliu.me/hibernate-object-status/3.jpg">
+<meta property="og:updated_time" content="2020-04-09T07:16:05.581Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="hibernate的对象状态分析">
+<meta name="twitter:description" content="开发框架 springMVC hibernate5.0.1hibernate三种状态Hibernate定义并支持下列对象状态(state):  临时状态(Transient)当new一个实体对象后, 这个对象处于临时状态, 即这个对象只是一个保存临时数据的内存区域, 如果没有变量引用这个对象, 则会被jre垃圾回收机制回收. 这个对象所保存的数据与数据库没有任何关系, 除非通过Session的sa">
+<meta name="twitter:image" content="http://images.royliu.me/hibernate-object-status/1.jpg">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    sidebar: {"position":"left","display":"post","offset":12,"offset_float":0,"b2t":false,"scrollpercent":false},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2017/07/15/hibernate-object-status/">
+
+
+
+
+
+  <title>hibernate的对象状态分析 | freedom</title>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">freedom</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">Coding changes the world</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br>
+            
+            关于
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-commonweal">
+          <a href="/404.html" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-heartbeat"></i> <br>
+            
+            公益404
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2017/07/15/hibernate-object-status/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="roy liu">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/myself.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="freedom">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">hibernate的对象状态分析</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-07-15T16:21:24+08:00">
+                2017-07-15
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/hibernate/" itemprop="url" rel="index">
+                    <span itemprop="name">hibernate</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h2 id="开发框架"><a href="#开发框架" class="headerlink" title="开发框架"></a>开发框架</h2><ul>
+<li>springMVC</li>
+<li>hibernate5.0.1<h2 id="hibernate三种状态"><a href="#hibernate三种状态" class="headerlink" title="hibernate三种状态"></a>hibernate三种状态</h2>Hibernate定义并支持下列对象状态(state):</li>
+</ul>
+<h3 id="临时状态-Transient"><a href="#临时状态-Transient" class="headerlink" title="临时状态(Transient)"></a>临时状态(Transient)</h3><p>当new一个实体对象后, 这个对象处于临时状态, 即这个对象只是一个保存临时数据的内存区域, 如果没有变量引用这个对象, 则会被jre垃圾回收机制回收. 这个对象所保存的数据与数据库没有任何关系, 除非通过Session的save或者SaveOrUpdate把临时对象与数据库关联, 并把数据插入或者更新到数据库, 这个对象才转换为持久对象.<br><a id="more"></a></p>
+<h3 id="持久状态-Persistent"><a href="#持久状态-Persistent" class="headerlink" title="持久状态(Persistent)"></a>持久状态(Persistent)</h3><p>持久(Persistent)的实例在数据库中有对应的记录，并拥有一个持久化标识(identifier)。 持久(Persistent)的实例可能是刚被保存的，或刚被加载的，无论哪一种，按定义，它存在于相关联的Session作用范围内。 Hibernate会检测到处于持久(Persistent)状态的对象的任何改动，在当前操作单元执行完毕时将对象数据与数据库同步。 开发者不需要手动执行UPDATE。将对象从持久(Persistent)状态变成临时(Transient)状态同样也不需要手动执行DELETE语句。</p>
+<h3 id="游离状态-Detached"><a href="#游离状态-Detached" class="headerlink" title="游离状态(Detached)"></a>游离状态(Detached)</h3><p>当Session进行了Close、Clear或者evict后, 持久化对象虽然拥有持久化标识符和与数据库对应记录一致的值, 但是因为会话已经消失, 对象不在持久化管理之内, 所以处于游离. 游离状态的对象与临时状态对象是十分相似的, 只是它还含有持久化标识.游离状态(Detached)对象如果重新关联到某个新的Session上， 会再次转变为持久(Persistent)的 。</p>
+<p>具体可以看下图（图片来自网络） </p>
+<p><img src="http://images.royliu.me/hibernate-object-status/1.jpg" alt="这里写图片描述"></p>
+<h2 id="代码演示"><a href="#代码演示" class="headerlink" title="代码演示"></a>代码演示</h2><p>为了演示三种状态的区别，做几个小例子</p>
+<h3 id="持久态自动更新演示"><a href="#持久态自动更新演示" class="headerlink" title="持久态自动更新演示"></a>持久态自动更新演示</h3><p>如下代码，从数据库里取出catgegory对象，此时的对象处于持久态，通过set方法，更改category的名字，此时Category已经发生变化，为了演示自动更新，我们采用另一个对象，通过save另一个对象，来顺便更新category。注意，此时scriptService save的是一个script对象，会看到hibernate日志，同时也更新了category对象。该实验必须在一个session上下文中进行。</p>
+<h4 id="演示代码和hibernate日志"><a href="#演示代码和hibernate日志" class="headerlink" title="演示代码和hibernate日志"></a>演示代码和hibernate日志</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@PostMapping</span>(value = <span class="string">"/groupEdit"</span>)</span><br><span class="line">   <span class="keyword">public</span> <span class="meta">@ResponseBody</span> <span class="function">RestResult <span class="title">groupEdit</span><span class="params">(@RequestParam Integer id, @RequestParam String name)</span></span>&#123;</span><br><span class="line">       ScriptCategory category = scriptCategoryService.findByName(name);</span><br><span class="line">       <span class="keyword">if</span> (category != <span class="keyword">null</span>)&#123;</span><br><span class="line">           <span class="keyword">return</span> <span class="keyword">new</span> RestResult(<span class="keyword">false</span>, <span class="string">"已存在同名分组"</span>);</span><br><span class="line">       &#125;</span><br><span class="line">       category = scriptCategoryService.findById(id);</span><br><span class="line">       category.setName(name);</span><br><span class="line">       <span class="comment">//scriptCategoryService.save(category);</span></span><br><span class="line">       Script script = scriptService.findById(<span class="number">1</span>);</span><br><span class="line">       script.setAuthor(<span class="string">"llll"</span>);</span><br><span class="line">       scriptService.save(script);</span><br><span class="line">       OperationLogHolder.builder().record(OperationAction.EDIT_SCRIPT_GROUP, <span class="string">"编辑脚本分组: "</span>+ name ,</span><br><span class="line">               OperationResult.SUCCESS);</span><br><span class="line">       <span class="keyword">return</span> <span class="keyword">new</span> RestResult(<span class="keyword">true</span>, <span class="string">"编辑分组成功"</span>);</span><br><span class="line">   &#125;</span><br></pre></td></tr></table></figure>
+<p><img src="http://images.royliu.me/hibernate-object-status/2.jpg" alt="这里写图片描述"></p>
+<h3 id="从持久态变为游离态演示"><a href="#从持久态变为游离态演示" class="headerlink" title="从持久态变为游离态演示"></a>从持久态变为游离态演示</h3><p>假如说你不想对category进行自动更新，则可以通过将持久态转化为游离态，也就是托管状态，通过session.evict 方法，删除session中的category,此时scriptService.save(script)只会保存自己的对象。 </p>
+<p>在自己的service行加入以下方法，移除session上下文中的对象，就可以变为游离态。</p>
+<h4 id="演示代码和hibernate日志-1"><a href="#演示代码和hibernate日志-1" class="headerlink" title="演示代码和hibernate日志"></a>演示代码和hibernate日志</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Service</span>(<span class="string">"scriptService"</span>)</span><br><span class="line"><span class="meta">@Transactional</span>(readOnly = <span class="keyword">true</span>)</span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ScriptServiceImpl</span> <span class="keyword">implements</span> <span class="title">ScriptService</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Autowired</span></span><br><span class="line">    <span class="keyword">private</span> EntityManager entityManager;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Autowired</span></span><br><span class="line">    <span class="keyword">private</span> ScriptRepo scriptRepo;</span><br><span class="line"></span><br><span class="line">    <span class="comment">//此处省略若干行  </span></span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">sessionEvict</span><span class="params">(Object object)</span></span>&#123;</span><br><span class="line">        Session session = (Session)entityManager.getDelegate();</span><br><span class="line">        session.evict(object);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@PostMapping</span>(value = <span class="string">"/groupEdit"</span>)</span><br><span class="line"><span class="keyword">public</span> <span class="meta">@ResponseBody</span> <span class="function">RestResult <span class="title">groupEdit</span><span class="params">(@RequestParam Integer id, @RequestParam String name)</span></span>&#123;</span><br><span class="line">    ScriptCategory category = scriptCategoryService.findByName(name);</span><br><span class="line">    <span class="keyword">if</span> (category != <span class="keyword">null</span>)&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">new</span> RestResult(<span class="keyword">false</span>, <span class="string">"已存在同名分组"</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    category = scriptCategoryService.findById(id);</span><br><span class="line">    category.setName(name);</span><br><span class="line">    <span class="comment">//scriptCategoryService.save(category);</span></span><br><span class="line">    scriptService.sessionEvict(category);</span><br><span class="line">    Script script = scriptService.findById(<span class="number">1</span>);</span><br><span class="line">    script.setAuthor(<span class="string">"lgggg"</span>);</span><br><span class="line">    scriptService.save(script);</span><br><span class="line">    OperationLogHolder.builder().record(OperationAction.EDIT_SCRIPT_GROUP, <span class="string">"编辑脚本分组: "</span>+ name ,</span><br><span class="line">            OperationResult.SUCCESS);</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">new</span> RestResult(<span class="keyword">true</span>, <span class="string">"编辑分组成功"</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><img src="http://images.royliu.me/hibernate-object-status/3.jpg" alt="这里写图片描述"></p>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/hiberate-objectState/" rel="tag"># hiberate-objectState</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2017/06/28/websocket-multithread-problem/" rel="next" title="websocket多线程问题">
+                <i class="fa fa-chevron-left"></i> websocket多线程问题
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2017/07/30/shadowsocks-optimization-google-bbr/" rel="prev" title="shadowsocks之采用google bbr算法优化">
+                shadowsocks之采用google bbr算法优化 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image" src="/images/myself.jpg" alt="roy liu">
+          <p class="site-author-name" itemprop="name">roy liu</p>
+           
+              <p class="site-description motion-element" itemprop="description">keep your dream alive</p>
+          
+        </div>
+        <nav class="site-state motion-element">
+
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives/">
+                <span class="site-state-item-count">29</span>
+                <span class="site-state-item-name">日志</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-categories">
+              <a href="/categories/index.html">
+                <span class="site-state-item-count">15</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-tags">
+              <a href="/tags/index.html">
+                <span class="site-state-item-count">34</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+        </div>
+
+        
+        
+
+        
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#开发框架"><span class="nav-number">1.</span> <span class="nav-text">开发框架</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#hibernate三种状态"><span class="nav-number">2.</span> <span class="nav-text">hibernate三种状态</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#临时状态-Transient"><span class="nav-number">2.1.</span> <span class="nav-text">临时状态(Transient)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#持久状态-Persistent"><span class="nav-number">2.2.</span> <span class="nav-text">持久状态(Persistent)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#游离状态-Detached"><span class="nav-number">2.3.</span> <span class="nav-text">游离状态(Detached)</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#代码演示"><span class="nav-number">3.</span> <span class="nav-text">代码演示</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#持久态自动更新演示"><span class="nav-number">3.1.</span> <span class="nav-text">持久态自动更新演示</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#演示代码和hibernate日志"><span class="nav-number">3.1.1.</span> <span class="nav-text">演示代码和hibernate日志</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#从持久态变为游离态演示"><span class="nav-number">3.2.</span> <span class="nav-text">从持久态变为游离态演示</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#演示代码和hibernate日志-1"><span class="nav-number">3.2.1.</span> <span class="nav-text">演示代码和hibernate日志</span></a></li></ol></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">roy liu</span>
+</div>
+
+
+<div class="powered-by">
+  由 <a class="theme-link" href="https://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Pisces
+  </a>
+</div>
+
+
+        
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.1"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.1"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.1"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.1"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.1"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.1"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.1"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

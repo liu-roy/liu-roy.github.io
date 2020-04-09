@@ -1,0 +1,812 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.1" rel="stylesheet" type="text/css">
+
+
+  <meta name="keywords" content="quartz,源码分析,">
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.1">
+
+
+
+
+
+
+<meta name="description" content="先简单介绍一下quartz，Quartz是一个功能丰富的开源作业调度库，可以集成到几乎任何Java应用程序中 - 从最小的独立应用程序到最大的电子商务系统。quartz可用于创建执行数十，数百甚至数十万个作业的简单或复杂的计划; 任务定义为标准Java组件的任务，可以执行任何可以对其进行编程的任何内容。Quartz Scheduler包含许多企业级功能，例如支持JTA事务和集群。以上内容来自qua">
+<meta name="keywords" content="quartz,源码分析">
+<meta property="og:type" content="article">
+<meta property="og:title" content="quartz2.x源码分析——启动过程">
+<meta property="og:url" content="http://yoursite.com/2017/04/13/quartz2-x-code-analyse-startprocess/index.html">
+<meta property="og:site_name" content="freedom">
+<meta property="og:description" content="先简单介绍一下quartz，Quartz是一个功能丰富的开源作业调度库，可以集成到几乎任何Java应用程序中 - 从最小的独立应用程序到最大的电子商务系统。quartz可用于创建执行数十，数百甚至数十万个作业的简单或复杂的计划; 任务定义为标准Java组件的任务，可以执行任何可以对其进行编程的任何内容。Quartz Scheduler包含许多企业级功能，例如支持JTA事务和集群。以上内容来自qua">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:updated_time" content="2020-04-09T07:16:05.583Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="quartz2.x源码分析——启动过程">
+<meta name="twitter:description" content="先简单介绍一下quartz，Quartz是一个功能丰富的开源作业调度库，可以集成到几乎任何Java应用程序中 - 从最小的独立应用程序到最大的电子商务系统。quartz可用于创建执行数十，数百甚至数十万个作业的简单或复杂的计划; 任务定义为标准Java组件的任务，可以执行任何可以对其进行编程的任何内容。Quartz Scheduler包含许多企业级功能，例如支持JTA事务和集群。以上内容来自qua">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    sidebar: {"position":"left","display":"post","offset":12,"offset_float":0,"b2t":false,"scrollpercent":false},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2017/04/13/quartz2-x-code-analyse-startprocess/">
+
+
+
+
+
+  <title>quartz2.x源码分析——启动过程 | freedom</title>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">freedom</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">Coding changes the world</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br>
+            
+            关于
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-commonweal">
+          <a href="/404.html" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-heartbeat"></i> <br>
+            
+            公益404
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2017/04/13/quartz2-x-code-analyse-startprocess/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="roy liu">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/myself.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="freedom">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">quartz2.x源码分析——启动过程</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-04-13T14:59:01+08:00">
+                2017-04-13
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/quartz/" itemprop="url" rel="index">
+                    <span itemprop="name">quartz</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>先简单介绍一下quartz，Quartz是一个功能丰富的开源作业调度库，可以集成到几乎任何Java应用程序中 - 从最小的独立应用程序到最大的电子商务系统。quartz可用于创建执行数十，数百甚至数十万个作业的简单或复杂的计划; 任务定义为标准Java组件的任务，可以执行任何可以对其进行编程的任何内容。Quartz Scheduler包含许多企业级功能，例如支持JTA事务和集群。<br>以上内容来自<a href="http://www.quartz-scheduler.org/overview/" target="_blank" rel="noopener">quartz官网</a>。</p>
+<p>我们会针对quartz的几个主要类进行分析，看一下quartz是如何实现定时调度功能</p>
+<h3 id="1-1测试Demo"><a href="#1-1测试Demo" class="headerlink" title="1.1测试Demo"></a>1.1测试Demo</h3><p> 来自官方实例的example1<br><a id="more"></a><br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">SimpleExample</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">    Logger log = LoggerFactory.getLogger(SimpleExample.class);</span><br><span class="line"></span><br><span class="line">    log.info(<span class="string">"------- Initializing ----------------------"</span>);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// First we must get a reference to a scheduler</span></span><br><span class="line">    SchedulerFactory sf = <span class="keyword">new</span> StdSchedulerFactory();</span><br><span class="line">    Scheduler sched = sf.getScheduler();</span><br><span class="line"></span><br><span class="line">    log.info(<span class="string">"------- Initialization Complete -----------"</span>);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// computer a time that is on the next round minute</span></span><br><span class="line">    Date runTime = evenMinuteDate(<span class="keyword">new</span> Date());</span><br><span class="line"></span><br><span class="line">    log.info(<span class="string">"------- Scheduling Job  -------------------"</span>);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// define the job and tie it to our HelloJob class</span></span><br><span class="line">    JobDetail job = newJob(HelloJob.class).withIdentity(<span class="string">"job1"</span>, <span class="string">"group1"</span>).build();</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Trigger the job to run on the next round minute</span></span><br><span class="line">    Trigger trigger = newTrigger().withIdentity(<span class="string">"trigger1"</span>, <span class="string">"group1"</span>).startAt(runTime).build();</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Tell quartz to schedule the job using our trigger</span></span><br><span class="line">    sched.scheduleJob(job, trigger);</span><br><span class="line">    log.info(job.getKey() + <span class="string">" will run at: "</span> + runTime);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Start up the scheduler (nothing can actually run until the</span></span><br><span class="line">    <span class="comment">// scheduler has been started)</span></span><br><span class="line">    sched.start();</span><br><span class="line"></span><br><span class="line">    log.info(<span class="string">"------- Started Scheduler -----------------"</span>);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// wait long enough so that the scheduler as an opportunity to</span></span><br><span class="line">    <span class="comment">// run the job!</span></span><br><span class="line">    log.info(<span class="string">"------- Waiting 65 seconds... -------------"</span>);</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">      <span class="comment">// wait 65 seconds to show job</span></span><br><span class="line">      Thread.sleep(<span class="number">65L</span> * <span class="number">1000L</span>);</span><br><span class="line">      <span class="comment">// executing...</span></span><br><span class="line">    &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">      <span class="comment">//</span></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// shut down the scheduler</span></span><br><span class="line">    log.info(<span class="string">"------- Shutting Down ---------------------"</span>);</span><br><span class="line">    sched.shutdown(<span class="keyword">true</span>);</span><br><span class="line">    log.info(<span class="string">"------- Shutdown Complete -----------------"</span>);</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line"></span><br><span class="line">    SimpleExample example = <span class="keyword">new</span> SimpleExample();</span><br><span class="line">    example.run();</span><br><span class="line"></span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">HelloJob</span> <span class="keyword">implements</span> <span class="title">Job</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> Logger _log = LoggerFactory.getLogger(HelloJob.class);</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">HelloJob</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">execute</span><span class="params">(JobExecutionContext context)</span></span></span><br><span class="line"><span class="function">        <span class="keyword">throws</span> JobExecutionException </span>&#123;</span><br><span class="line">        _log.info(<span class="string">"Hello World! - "</span> + <span class="keyword">new</span> Date());</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h3 id="1-2-quartz关键API"><a href="#1-2-quartz关键API" class="headerlink" title="1.2 quartz关键API"></a>1.2 quartz关键API</h3><p>从上述example中我们可以看到quartz主要接口和类</p>
+<ul>
+<li>Scheduler - 进行作业调度的主要接口.</li>
+<li>Job - 作业接口，编写自己的作业需要实现，如example中的HelloJob</li>
+<li>JobDetail - 作业的详细信息，除了包含作业本身，还包含一些额外的数据。</li>
+<li>Trigger - 作业计划的组件-作业何时执行，执行次数，频率等。</li>
+<li>JobBuilder - 建造者模式创建 JobDetail实例.</li>
+<li>TriggerBuilder - 建造者模式创建 Trigger 实例.</li>
+<li>QuartzSchedulerThread 继承Thread 主要的执行任务线程</li>
+</ul>
+<p>从上面的几个接口，可以看到quartz设计非常精妙，将作业和触发器分开设计，同时调度器完成对作业的调度。<br>了解了几个关键类和接口作用，下面我们来分析整个执行过程。</p>
+<h3 id="1-3-执行过程分析"><a href="#1-3-执行过程分析" class="headerlink" title="1.3 执行过程分析"></a>1.3 执行过程分析</h3><h4 id="1-3-1-从StdSchedulerFactory获取scheduler"><a href="#1-3-1-从StdSchedulerFactory获取scheduler" class="headerlink" title="1.3.1 从StdSchedulerFactory获取scheduler"></a>1.3.1 从StdSchedulerFactory获取scheduler</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">public</span> Scheduler <span class="title">getScheduler</span><span class="params">()</span> <span class="keyword">throws</span> SchedulerException </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (cfg == <span class="keyword">null</span>) &#123;</span><br><span class="line">        initialize();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    SchedulerRepository schedRep = SchedulerRepository.getInstance();</span><br><span class="line"></span><br><span class="line">    Scheduler sched = schedRep.lookup(getSchedulerName());</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (sched != <span class="keyword">null</span>) &#123;</span><br><span class="line">        <span class="keyword">if</span> (sched.isShutdown()) &#123;</span><br><span class="line">            schedRep.remove(getSchedulerName());</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            <span class="keyword">return</span> sched;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    sched = instantiate();</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> sched;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<ol>
+<li>cfg变量为PropertiesParser实例————是quartz的配置信息（主要是quartz.properties），如果为空，就初始化读取quartz的配置信息。</li>
+<li>SchedulerRepository是一个HashMap,用于存储Scheduler。如果有重名的，判断是否已经停止，是从hashMap删掉,否直接返回已保存实例</li>
+<li>SchedulerRepository未找到，实例化一个scheduler</li>
+</ol>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br><span class="line">159</span><br><span class="line">160</span><br><span class="line">161</span><br><span class="line">162</span><br><span class="line">163</span><br><span class="line">164</span><br><span class="line">165</span><br><span class="line">166</span><br><span class="line">167</span><br><span class="line">168</span><br><span class="line">169</span><br><span class="line">170</span><br><span class="line">171</span><br><span class="line">172</span><br><span class="line">173</span><br><span class="line">174</span><br><span class="line">175</span><br><span class="line">176</span><br><span class="line">177</span><br><span class="line">178</span><br><span class="line">179</span><br><span class="line">180</span><br><span class="line">181</span><br><span class="line">182</span><br><span class="line">183</span><br><span class="line">184</span><br><span class="line">185</span><br><span class="line">186</span><br><span class="line">187</span><br><span class="line">188</span><br><span class="line">189</span><br><span class="line">190</span><br><span class="line">191</span><br><span class="line">192</span><br><span class="line">193</span><br><span class="line">194</span><br><span class="line">195</span><br><span class="line">196</span><br><span class="line">197</span><br><span class="line">198</span><br><span class="line">199</span><br><span class="line">200</span><br><span class="line">201</span><br><span class="line">202</span><br><span class="line">203</span><br><span class="line">204</span><br><span class="line">205</span><br><span class="line">206</span><br><span class="line">207</span><br><span class="line">208</span><br><span class="line">209</span><br><span class="line">210</span><br><span class="line">211</span><br><span class="line">212</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> Scheduler <span class="title">instantiate</span><span class="params">()</span> <span class="keyword">throws</span> SchedulerException </span>&#123;</span><br><span class="line">        <span class="keyword">if</span> (cfg == <span class="keyword">null</span>) &#123;</span><br><span class="line">            initialize();</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (initException != <span class="keyword">null</span>) &#123;</span><br><span class="line">            <span class="keyword">throw</span> initException;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        .....</span><br><span class="line">        .....</span><br><span class="line"></span><br><span class="line">        SchedulerRepository schedRep = SchedulerRepository.getInstance();</span><br><span class="line"></span><br><span class="line">        <span class="comment">// Get Scheduler Properties</span></span><br><span class="line">        <span class="comment">// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~</span></span><br><span class="line"></span><br><span class="line">        String schedName = cfg.getStringProperty(PROP_SCHED_INSTANCE_NAME,</span><br><span class="line">                <span class="string">"QuartzScheduler"</span>);</span><br><span class="line"></span><br><span class="line">        String threadName = cfg.getStringProperty(PROP_SCHED_THREAD_NAME,</span><br><span class="line">                schedName + <span class="string">"_QuartzSchedulerThread"</span>);</span><br><span class="line"></span><br><span class="line">        .....</span><br><span class="line">        .....</span><br><span class="line"></span><br><span class="line">        String managementRESTServiceHostAndPort = cfg.getStringProperty(MANAGEMENT_REST_SERVICE_HOST_PORT, <span class="string">"0.0.0.0:9889"</span>);</span><br><span class="line"></span><br><span class="line">        Properties schedCtxtProps = cfg.getPropertyGroup(PROP_SCHED_CONTEXT_PREFIX, <span class="keyword">true</span>);</span><br><span class="line"></span><br><span class="line">        <span class="comment">// If Proxying to remote scheduler, short-circuit here...</span></span><br><span class="line">        <span class="comment">// ~~~~~~~~~~~~~~~~~~</span></span><br><span class="line">        <span class="keyword">if</span> (rmiProxy) &#123;</span><br><span class="line"></span><br><span class="line">           ....</span><br><span class="line">           ....</span><br><span class="line"></span><br><span class="line">            schedRep.bind(remoteScheduler);</span><br><span class="line"></span><br><span class="line">            <span class="keyword">return</span> remoteScheduler;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">        <span class="comment">// Create class load helper</span></span><br><span class="line">        ClassLoadHelper loadHelper = <span class="keyword">null</span>;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            loadHelper = (ClassLoadHelper) loadClass(classLoadHelperClass)</span><br><span class="line">                    .newInstance();</span><br><span class="line">        &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> SchedulerConfigException(</span><br><span class="line">                    <span class="string">"Unable to instantiate class load helper class: "</span></span><br><span class="line">                            + e.getMessage(), e);</span><br><span class="line">        &#125;</span><br><span class="line">        loadHelper.initialize();</span><br><span class="line"></span><br><span class="line">        <span class="comment">// If Proxying to remote JMX scheduler, short-circuit here...</span></span><br><span class="line">        <span class="comment">// ~~~~~~~~~~~~~~~~~~</span></span><br><span class="line">        <span class="keyword">if</span> (jmxProxy) &#123;</span><br><span class="line">            <span class="keyword">if</span> (autoId) &#123;</span><br><span class="line">                schedInstId = DEFAULT_INSTANCE_ID;</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">           ....</span><br><span class="line">           ....</span><br><span class="line"></span><br><span class="line">            jmxScheduler.initialize();</span><br><span class="line"></span><br><span class="line">            schedRep.bind(jmxScheduler);</span><br><span class="line"></span><br><span class="line">            <span class="keyword">return</span> jmxScheduler;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        </span><br><span class="line">        JobFactory jobFactory = <span class="keyword">null</span>;</span><br><span class="line">        <span class="keyword">if</span>(jobFactoryClass != <span class="keyword">null</span>) &#123;</span><br><span class="line">           ....</span><br><span class="line">           ....</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        InstanceIdGenerator instanceIdGenerator = <span class="keyword">null</span>;</span><br><span class="line">        <span class="keyword">if</span>(instanceIdGeneratorClass != <span class="keyword">null</span>) &#123;</span><br><span class="line">           .....</span><br><span class="line">           .....</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// Get ThreadPool Properties</span></span><br><span class="line">        <span class="comment">// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~</span></span><br><span class="line"></span><br><span class="line">        String tpClass = cfg.getStringProperty(PROP_THREAD_POOL_CLASS, SimpleThreadPool.class.getName());</span><br><span class="line">        ....</span><br><span class="line">        ....</span><br><span class="line"></span><br><span class="line">        <span class="comment">// Get JobStore Properties</span></span><br><span class="line">        <span class="comment">// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~</span></span><br><span class="line"></span><br><span class="line">        String jsClass = cfg.getStringProperty(PROP_JOB_STORE_CLASS,</span><br><span class="line">                RAMJobStore.class.getName());</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (jsClass == <span class="keyword">null</span>) &#123;</span><br><span class="line">        &#125;</span><br><span class="line">        ....</span><br><span class="line">        ....</span><br><span class="line">        ....</span><br><span class="line"></span><br><span class="line">        <span class="comment">// Set up any DataSources</span></span><br><span class="line">        <span class="comment">// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~</span></span><br><span class="line"></span><br><span class="line">        String[] dsNames = cfg.getPropertyGroups(PROP_DATASOURCE_PREFIX);</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; dsNames.length; i++) &#123;</span><br><span class="line">            PropertiesParser pp = <span class="keyword">new</span> PropertiesParser(cfg.getPropertyGroup(</span><br><span class="line">                    PROP_DATASOURCE_PREFIX + <span class="string">"."</span> + dsNames[i], <span class="keyword">true</span>));</span><br><span class="line"></span><br><span class="line">            String cpClass = pp.getStringProperty(PROP_CONNECTION_PROVIDER_CLASS, <span class="keyword">null</span>);</span><br><span class="line"></span><br><span class="line">            <span class="comment">// custom connectionProvider...</span></span><br><span class="line">           ....</span><br><span class="line">           ....</span><br><span class="line">           ....</span><br><span class="line"></span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// Set up any SchedulerPlugins</span></span><br><span class="line">        <span class="comment">// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~</span></span><br><span class="line"></span><br><span class="line">        String[] pluginNames = cfg.getPropertyGroups(PROP_PLUGIN_PREFIX);</span><br><span class="line">        SchedulerPlugin[] plugins = <span class="keyword">new</span> SchedulerPlugin[pluginNames.length];</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; pluginNames.length; i++) &#123;</span><br><span class="line">            Properties pp = cfg.getPropertyGroup(PROP_PLUGIN_PREFIX + <span class="string">"."</span></span><br><span class="line">                    + pluginNames[i], <span class="keyword">true</span>);</span><br><span class="line"></span><br><span class="line">            ....</span><br><span class="line">            ....</span><br><span class="line"></span><br><span class="line">            plugins[i] = plugin;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// Set up any JobListeners</span></span><br><span class="line">        <span class="comment">// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~</span></span><br><span class="line"></span><br><span class="line">        Class&lt;?&gt;[] strArg = <span class="keyword">new</span> Class[] &#123; String.class &#125;;</span><br><span class="line">        String[] jobListenerNames = cfg.getPropertyGroups(PROP_JOB_LISTENER_PREFIX);</span><br><span class="line">        JobListener[] jobListeners = <span class="keyword">new</span> JobListener[jobListenerNames.length];</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; jobListenerNames.length; i++) &#123;</span><br><span class="line">            Properties lp = cfg.getPropertyGroup(PROP_JOB_LISTENER_PREFIX + <span class="string">"."</span></span><br><span class="line">                    + jobListenerNames[i], <span class="keyword">true</span>);</span><br><span class="line"></span><br><span class="line">            .....</span><br><span class="line">            .....</span><br><span class="line"></span><br><span class="line">            jobListeners[i] = listener;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// Set up any TriggerListeners</span></span><br><span class="line">        <span class="comment">// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~</span></span><br><span class="line"></span><br><span class="line">        String[] triggerListenerNames = cfg.getPropertyGroups(PROP_TRIGGER_LISTENER_PREFIX);</span><br><span class="line">        TriggerListener[] triggerListeners = <span class="keyword">new</span> TriggerListener[triggerListenerNames.length];</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; triggerListenerNames.length; i++) &#123;</span><br><span class="line">            Properties lp = cfg.getPropertyGroup(PROP_TRIGGER_LISTENER_PREFIX + <span class="string">"."</span></span><br><span class="line">                    + triggerListenerNames[i], <span class="keyword">true</span>);</span><br><span class="line"></span><br><span class="line">            String listenerClass = lp.getProperty(PROP_LISTENER_CLASS, <span class="keyword">null</span>);</span><br><span class="line"></span><br><span class="line">           .....</span><br><span class="line">           .....</span><br><span class="line">           .....</span><br><span class="line"></span><br><span class="line">            triggerListeners[i] = listener;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">boolean</span> tpInited = <span class="keyword">false</span>;</span><br><span class="line">        <span class="keyword">boolean</span> qsInited = <span class="keyword">false</span>;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">        <span class="comment">// Get ThreadExecutor Properties</span></span><br><span class="line">        <span class="comment">// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~</span></span><br><span class="line"></span><br><span class="line">        String threadExecutorClass = cfg.getStringProperty(PROP_THREAD_EXECUTOR_CLASS);</span><br><span class="line">        <span class="keyword">if</span> (threadExecutorClass != <span class="keyword">null</span>) &#123;</span><br><span class="line">            tProps = cfg.getPropertyGroup(PROP_THREAD_EXECUTOR, <span class="keyword">true</span>);</span><br><span class="line">           .....</span><br><span class="line">           .....</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">        <span class="comment">// Fire everything up</span></span><br><span class="line">        <span class="comment">// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~</span></span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">                </span><br><span class="line">    </span><br><span class="line">            JobRunShellFactory jrsf = <span class="keyword">null</span>; <span class="comment">// Create correct run-shell factory...</span></span><br><span class="line">    </span><br><span class="line">            ......</span><br><span class="line">           ......</span><br><span class="line">    </span><br><span class="line">            schedRep.bind(scheduler);</span><br><span class="line">            <span class="keyword">return</span> scheduler;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">catch</span>(SchedulerException e) &#123;</span><br><span class="line">            shutdownFromInstantiateException(tp, qs, tpInited, qsInited);</span><br><span class="line">            <span class="keyword">throw</span> e;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">catch</span>(RuntimeException re) &#123;</span><br><span class="line">            shutdownFromInstantiateException(tp, qs, tpInited, qsInited);</span><br><span class="line">            <span class="keyword">throw</span> re;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">catch</span>(Error re) &#123;</span><br><span class="line">            shutdownFromInstantiateException(tp, qs, tpInited, qsInited);</span><br><span class="line">            <span class="keyword">throw</span> re;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+<p>instantiate()是一个比较重要的方法，主要从上一段代码介绍的PropertiesParser获取<a href="http://www.quartz-scheduler.org/documentation/quartz-2.2.x/configuration/" target="_blank" rel="noopener">Scheduler配置信息</a></p>
+<ol>
+<li>获取Scheduler Properties</li>
+<li>如果是rmi代理sheduler,则创建RemoteScheduler，并通过scheRep.bind放入SchedulerRepository中，返回scheduler,结束</li>
+<li>创建class load helper 加载类提供帮助</li>
+<li><p>如果是jmx scheduler 则进行对应操作，并通过scheRep.bind放入SchedulerRepository中，返回scheduler,结束</p>
+<p>往下是本地调度，不是远程调度，因此需要获取和本地调度相关的信息</p>
+</li>
+</ol>
+<p>6.获取线程池配置<br>7.获取Job存储设置，（分为内存存储和数据库存储作业还有一个不太了解的方式,默认是内存存储）<br>8.设置数据库连接池<br>9.安装Scheduler插件<br>10.安装JobListener ，监听作业启动前，作业呗否决执行，作业已经执行，参见[JobListener.class]<br>11.安装TriggerListener,监听触发器被触发工作将要执行时，触发错过，否决工作执行，工作完成，参见[TriggerListener.class]<br>12.获取ThreadExecutor配置<br>13.初始化JobRunShellFactory，这个工厂类很重要，后面会介绍<br>14.创建标准StdScheduler，返回。</p>
+<h4 id="1-3-2-创建JobDetail"><a href="#1-3-2-创建JobDetail" class="headerlink" title="1.3.2 创建JobDetail"></a>1.3.2 创建JobDetail</h4><p>JobDeatil包含jobDataMap和jobClass，以及一些描述，名称等等，采用Build模式建造，jobDataMap主要存储一些额外信息。</p>
+<h4 id="1-3-3-创建Trigger"><a href="#1-3-3-创建Trigger" class="headerlink" title="1.3.3 创建Trigger"></a>1.3.3 创建Trigger</h4><p>Trigger主要包含了一些计划信息，详细可参考接口</p>
+<p>准备工作做完了，开始进行调度</p>
+<h4 id="1-3-3-scheduler-scheduleJob"><a href="#1-3-3-scheduler-scheduleJob" class="headerlink" title="1.3.3 scheduler.scheduleJob()"></a>1.3.3 scheduler.scheduleJob()</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> Date <span class="title">scheduleJob</span><span class="params">(JobDetail jobDetail, Trigger trigger)</span></span></span><br><span class="line"><span class="function">        <span class="keyword">throws</span> SchedulerException </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> sched.scheduleJob(jobDetail, trigger);</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+<p>sched是StdScheduler的一个成员，是QuartzScheduler的实例，在上面的instantiate()方法中实例化过并且用它构造StdScheduler;看一下QuartzScheduler的scheduleJob<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> Date <span class="title">scheduleJob</span><span class="params">(JobDetail jobDetail,</span></span></span><br><span class="line"><span class="function"><span class="params">        Trigger trigger)</span> <span class="keyword">throws</span> SchedulerException </span>&#123;</span><br><span class="line">    validateState();</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (jobDetail == <span class="keyword">null</span>) &#123;</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> SchedulerException(<span class="string">"JobDetail cannot be null"</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">if</span> (trigger == <span class="keyword">null</span>) &#123;</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> SchedulerException(<span class="string">"Trigger cannot be null"</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">if</span> (jobDetail.getKey() == <span class="keyword">null</span>) &#123;</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> SchedulerException(<span class="string">"Job's key cannot be null"</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (jobDetail.getJobClass() == <span class="keyword">null</span>) &#123;</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> SchedulerException(<span class="string">"Job's class cannot be null"</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    OperableTrigger trig = (OperableTrigger)trigger;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (trigger.getJobKey() == <span class="keyword">null</span>) &#123;</span><br><span class="line">        trig.setJobKey(jobDetail.getKey());</span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> (!trigger.getJobKey().equals(jobDetail.getKey())) &#123;</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> SchedulerException(</span><br><span class="line">            <span class="string">"Trigger does not reference given job!"</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    trig.validate();</span><br><span class="line"></span><br><span class="line">    Calendar cal = <span class="keyword">null</span>;</span><br><span class="line">    <span class="keyword">if</span> (trigger.getCalendarName() != <span class="keyword">null</span>) &#123;</span><br><span class="line">        cal = resources.getJobStore().retrieveCalendar(trigger.getCalendarName());</span><br><span class="line">    &#125;</span><br><span class="line">    Date ft = trig.computeFirstFireTime(cal);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (ft == <span class="keyword">null</span>) &#123;</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> SchedulerException(</span><br><span class="line">                <span class="string">"Based on configured schedule, the given trigger '"</span> + trigger.getKey() + <span class="string">"' will never fire."</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    resources.getJobStore().storeJobAndTrigger(jobDetail, trig);</span><br><span class="line">    notifySchedulerListenersJobAdded(jobDetail);</span><br><span class="line">    notifySchedulerThread(trigger.getNextFireTime().getTime());</span><br><span class="line">    notifySchedulerListenersSchduled(trigger);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> ft;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>让我们来看一下schedule()方法</p>
+<ol>
+<li>一些校验，jobDetail，trigger，jobClass判空</li>
+<li>计算第一次执行的日期，计算日期为空，则抛出异常，job永远不会被调度</li>
+<li>如果上述通过，通过jobStore存储jobDetail和trigger</li>
+<li>通知监听器程序：工作加入通知、</li>
+</ol>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">notifySchedulerListenersJobAdded</span><span class="params">(JobDetail jobDetail)</span> </span>&#123;</span><br><span class="line">     <span class="comment">// build a list of all scheduler listeners that are to be notified...</span></span><br><span class="line">     List&lt;SchedulerListener&gt; schedListeners = buildSchedulerListenerList();</span><br><span class="line"></span><br><span class="line">     <span class="comment">// notify all scheduler listeners</span></span><br><span class="line">     <span class="keyword">for</span>(SchedulerListener sl: schedListeners) &#123;</span><br><span class="line">         <span class="keyword">try</span> &#123;</span><br><span class="line">             sl.jobAdded(jobDetail);</span><br><span class="line">         &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">             getLog().error(</span><br><span class="line">                     <span class="string">"Error while notifying SchedulerListener of JobAdded."</span>,</span><br><span class="line">                     e);</span><br><span class="line">         &#125;</span><br><span class="line">     &#125;</span><br><span class="line"> &#125;</span><br></pre></td></tr></table></figure>
+<p>5.通知监听器程序：通知正在休眠（工作可能都执行完，主线程sigLock.wait()）的主执行线程，有工作加入，唤醒主线程</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">notifySchedulerThread</span><span class="params">(<span class="keyword">long</span> candidateNewNextFireTime)</span> </span>&#123;</span><br><span class="line">       <span class="keyword">if</span> (isSignalOnSchedulingChange()) &#123;</span><br><span class="line">           signaler.signalSchedulingChange(candidateNewNextFireTime);</span><br><span class="line">       &#125;</span><br><span class="line">   &#125;</span><br><span class="line"></span><br><span class="line"> <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">signalSchedulingChange</span><span class="params">(<span class="keyword">long</span> candidateNewNextFireTime)</span> </span>&#123;</span><br><span class="line">       <span class="keyword">synchronized</span>(sigLock) &#123;</span><br><span class="line">           signaled = <span class="keyword">true</span>;</span><br><span class="line">           signaledNextFireTime = candidateNewNextFireTime;</span><br><span class="line">           sigLock.notifyAll();</span><br><span class="line">       &#125;</span><br><span class="line">   &#125;</span><br></pre></td></tr></table></figure>
+<p> 6.通知调度器job被调度了</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">notifySchedulerListenersSchduled</span><span class="params">(Trigger trigger)</span> </span>&#123;</span><br><span class="line">    <span class="comment">// build a list of all scheduler listeners that are to be notified...</span></span><br><span class="line">    List&lt;SchedulerListener&gt; schedListeners = buildSchedulerListenerList();</span><br><span class="line"></span><br><span class="line">    <span class="comment">// notify all scheduler listeners</span></span><br><span class="line">    <span class="keyword">for</span>(SchedulerListener sl: schedListeners) &#123;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            sl.jobScheduled(trigger);</span><br><span class="line">        &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">            getLog().error(</span><br><span class="line">                    <span class="string">"Error while notifying SchedulerListener of scheduled job."</span></span><br><span class="line">                            + <span class="string">"  Triger="</span> + trigger.getKey(), e);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>此时scheduler.scheduleJob()执行完毕</p>
+<h4 id="1-3-4-scheduler-start-未执行此函数，没有什么会真正执行，主线程loop循环一直被wait。"><a href="#1-3-4-scheduler-start-未执行此函数，没有什么会真正执行，主线程loop循环一直被wait。" class="headerlink" title="1.3.4 scheduler.start() 未执行此函数，没有什么会真正执行，主线程loop循环一直被wait。"></a>1.3.4 scheduler.start() 未执行此函数，没有什么会真正执行，主线程loop循环一直被wait。</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">start</span><span class="params">()</span> <span class="keyword">throws</span> SchedulerException </span>&#123;</span><br><span class="line">        sched.start();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//sched.start()</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">start</span><span class="params">()</span> <span class="keyword">throws</span> SchedulerException </span>&#123;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (shuttingDown|| closed) &#123;</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> SchedulerException(</span><br><span class="line">                    <span class="string">"The Scheduler cannot be restarted after shutdown() has been called."</span>);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// QTZ-212 : calling new schedulerStarting() method on the listeners</span></span><br><span class="line">        <span class="comment">// right after entering start()</span></span><br><span class="line">        notifySchedulerListenersStarting();</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (initialStart == <span class="keyword">null</span>) &#123;</span><br><span class="line">            initialStart = <span class="keyword">new</span> Date();</span><br><span class="line">            <span class="keyword">this</span>.resources.getJobStore().schedulerStarted();            </span><br><span class="line">            startPlugins();</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            resources.getJobStore().schedulerResumed();</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        schedThread.togglePause(<span class="keyword">false</span>);</span><br><span class="line"></span><br><span class="line">        getLog().info(</span><br><span class="line">                <span class="string">"Scheduler "</span> + resources.getUniqueIdentifier() + <span class="string">" started."</span>);</span><br><span class="line">        </span><br><span class="line">        notifySchedulerListenersStarted();</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+<ol>
+<li>判断调度器是否关掉或停止（因为可能开始之前已经将调度器停止或关闭），是则直接抛异常</li>
+<li>通知监听器，马上就要执行</li>
+<li>启动一些通知jobStore和一些插件开始执行，如果initial不为空，说明曾经启动过，则重新恢复</li>
+<li>切换线程开始执行togglePause(false)。此时开始执行， 下面的run()方法选取了一部分，未设置开始之前，while里面还有一个while (paused &amp;&amp; !halted.get()) 一直等待变量改变，否则，就一直wait这也就是sche.scheduleJob()未真正启动工作的原因</li>
+</ol>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line"> <span class="function"><span class="keyword">void</span> <span class="title">togglePause</span><span class="params">(<span class="keyword">boolean</span> pause)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">synchronized</span> (sigLock) &#123;</span><br><span class="line">            paused = pause;</span><br><span class="line"></span><br><span class="line">            <span class="keyword">if</span> (paused) &#123;</span><br><span class="line">                signalSchedulingChange(<span class="number">0</span>);</span><br><span class="line">            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                sigLock.notifyAll();</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">boolean</span> lastAcquireFailed = <span class="keyword">false</span>;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">while</span> (!halted.get()) &#123;</span><br><span class="line">            <span class="keyword">try</span> &#123;</span><br><span class="line">                <span class="comment">// check if we're supposed to pause...</span></span><br><span class="line">                <span class="keyword">synchronized</span> (sigLock) &#123;</span><br><span class="line">                    <span class="keyword">while</span> (paused &amp;&amp; !halted.get()) &#123;</span><br><span class="line">                        <span class="keyword">try</span> &#123;</span><br><span class="line">                            <span class="comment">// wait until togglePause(false) is called...</span></span><br><span class="line">                            sigLock.wait(<span class="number">1000L</span>);</span><br><span class="line">                        &#125; <span class="keyword">catch</span> (InterruptedException ignore) &#123;</span><br><span class="line">                        &#125;</span><br><span class="line">                    &#125;</span><br><span class="line"></span><br><span class="line">                    <span class="keyword">if</span> (halted.get()) &#123;</span><br><span class="line">                        <span class="keyword">break</span>;</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p> 5.通知任务已经开始执行</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">notifySchedulerListenersStarted</span><span class="params">()</span> </span>&#123;</span><br><span class="line">     <span class="comment">// build a list of all scheduler listeners that are to be notified...</span></span><br><span class="line">     List&lt;SchedulerListener&gt; schedListeners = buildSchedulerListenerList();</span><br><span class="line"></span><br><span class="line">     <span class="comment">// notify all scheduler listeners</span></span><br><span class="line">     <span class="keyword">for</span>(SchedulerListener sl: schedListeners) &#123;</span><br><span class="line">         <span class="keyword">try</span> &#123;</span><br><span class="line">             sl.schedulerStarted();</span><br><span class="line">         &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">             getLog().error(</span><br><span class="line">                     <span class="string">"Error while notifying SchedulerListener of startup."</span>,</span><br><span class="line">                     e);</span><br><span class="line">         &#125;</span><br><span class="line">     &#125;</span><br><span class="line"> &#125;</span><br></pre></td></tr></table></figure>
+<p>至此，整个流程大约完成了。<br>具体执行的（run）细节看看有空再讲一下。</p>
+<h2 id="参考文档"><a href="#参考文档" class="headerlink" title="参考文档"></a>参考文档</h2><ul>
+<li>quartz官方文档 <a href="http://www.quartz-scheduler.org/documentation" target="_blank" rel="noopener">http://www.quartz-scheduler.org/documentation</a></li>
+</ul>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/quartz/" rel="tag"># quartz</a>
+          
+            <a href="/tags/源码分析/" rel="tag"># 源码分析</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2017/03/04/hiberate-bug-hv1013/" rel="next" title="记一次亲身踩过的hibernate的bug">
+                <i class="fa fa-chevron-left"></i> 记一次亲身踩过的hibernate的bug
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2017/04/20/jetbrain-crash/" rel="prev" title="centos7 Intellij Idea 授权服务器搭建(Jetbrain 家族系列IDE)">
+                centos7 Intellij Idea 授权服务器搭建(Jetbrain 家族系列IDE) <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image" src="/images/myself.jpg" alt="roy liu">
+          <p class="site-author-name" itemprop="name">roy liu</p>
+           
+              <p class="site-description motion-element" itemprop="description">keep your dream alive</p>
+          
+        </div>
+        <nav class="site-state motion-element">
+
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives/">
+                <span class="site-state-item-count">29</span>
+                <span class="site-state-item-name">日志</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-categories">
+              <a href="/categories/index.html">
+                <span class="site-state-item-count">15</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-tags">
+              <a href="/tags/index.html">
+                <span class="site-state-item-count">34</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+        </div>
+
+        
+        
+
+        
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-1测试Demo"><span class="nav-number">1.</span> <span class="nav-text">1.1测试Demo</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-2-quartz关键API"><span class="nav-number">2.</span> <span class="nav-text">1.2 quartz关键API</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-3-执行过程分析"><span class="nav-number">3.</span> <span class="nav-text">1.3 执行过程分析</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-3-1-从StdSchedulerFactory获取scheduler"><span class="nav-number">3.1.</span> <span class="nav-text">1.3.1 从StdSchedulerFactory获取scheduler</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#1-3-2-创建JobDetail"><span class="nav-number">3.2.</span> <span class="nav-text">1.3.2 创建JobDetail</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#1-3-3-创建Trigger"><span class="nav-number">3.3.</span> <span class="nav-text">1.3.3 创建Trigger</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#1-3-3-scheduler-scheduleJob"><span class="nav-number">3.4.</span> <span class="nav-text">1.3.3 scheduler.scheduleJob()</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#1-3-4-scheduler-start-未执行此函数，没有什么会真正执行，主线程loop循环一直被wait。"><span class="nav-number">3.5.</span> <span class="nav-text">1.3.4 scheduler.start() 未执行此函数，没有什么会真正执行，主线程loop循环一直被wait。</span></a></li></ol></li></ol><li class="nav-item nav-level-2"><a class="nav-link" href="#参考文档"><span class="nav-number"></span> <span class="nav-text">参考文档</span></a></li></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">roy liu</span>
+</div>
+
+
+<div class="powered-by">
+  由 <a class="theme-link" href="https://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Pisces
+  </a>
+</div>
+
+
+        
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.1"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.1"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.1"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.1"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.1"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.1"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.1"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

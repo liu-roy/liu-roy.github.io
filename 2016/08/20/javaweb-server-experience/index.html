@@ -1,0 +1,837 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.1" rel="stylesheet" type="text/css">
+
+
+  <meta name="keywords" content="高可用,伸缩性,">
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.1">
+
+
+
+
+
+
+<meta name="description" content="去年参加技术分享活动，七牛的一个技术简要的介绍了一些高可用可伸缩的一些经验之谈，听完之后受益匪浅，整理一下，主要分以下几个部分:   入口层高可用 业务层高可用 缓存层高可用 数据库高可用 入口层可伸缩 业务层可伸缩 缓存层可伸缩 数据库可伸缩  下面来分层介绍实践方法。">
+<meta name="keywords" content="高可用,伸缩性">
+<meta property="og:type" content="article">
+<meta property="og:title" content="后端架构高可用可伸缩经验之谈">
+<meta property="og:url" content="http://yoursite.com/2016/08/20/javaweb-server-experience/index.html">
+<meta property="og:site_name" content="freedom">
+<meta property="og:description" content="去年参加技术分享活动，七牛的一个技术简要的介绍了一些高可用可伸缩的一些经验之谈，听完之后受益匪浅，整理一下，主要分以下几个部分:   入口层高可用 业务层高可用 缓存层高可用 数据库高可用 入口层可伸缩 业务层可伸缩 缓存层可伸缩 数据库可伸缩  下面来分层介绍实践方法。">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="http://images.royliu.me/webserver-ha-experience/1.jpg">
+<meta property="og:image" content="http://images.royliu.me/webserver-ha-experience/2.jpg">
+<meta property="og:image" content="http://images.royliu.me/webserver-ha-experience/3.jpg">
+<meta property="og:image" content="http://images.royliu.me/webserver-ha-experience/4.jpg">
+<meta property="og:image" content="http://images.royliu.me/webserver-ha-experience/5.jpg">
+<meta property="og:image" content="http://images.royliu.me/webserver-ha-experience/6.jpg">
+<meta property="og:updated_time" content="2020-04-09T07:16:05.581Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="后端架构高可用可伸缩经验之谈">
+<meta name="twitter:description" content="去年参加技术分享活动，七牛的一个技术简要的介绍了一些高可用可伸缩的一些经验之谈，听完之后受益匪浅，整理一下，主要分以下几个部分:   入口层高可用 业务层高可用 缓存层高可用 数据库高可用 入口层可伸缩 业务层可伸缩 缓存层可伸缩 数据库可伸缩  下面来分层介绍实践方法。">
+<meta name="twitter:image" content="http://images.royliu.me/webserver-ha-experience/1.jpg">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    sidebar: {"position":"left","display":"post","offset":12,"offset_float":0,"b2t":false,"scrollpercent":false},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2016/08/20/javaweb-server-experience/">
+
+
+
+
+
+  <title>后端架构高可用可伸缩经验之谈 | freedom</title>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">freedom</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">Coding changes the world</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br>
+            
+            关于
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-commonweal">
+          <a href="/404.html" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-heartbeat"></i> <br>
+            
+            公益404
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2016/08/20/javaweb-server-experience/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="roy liu">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/myself.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="freedom">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">后端架构高可用可伸缩经验之谈</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2016-08-20T13:58:42+08:00">
+                2016-08-20
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/后端设计/" itemprop="url" rel="index">
+                    <span itemprop="name">后端设计</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>去年参加技术分享活动，七牛的一个技术简要的介绍了一些高可用可伸缩的一些经验之谈，听完之后受益匪浅，整理一下，主要分以下几个部分: </p>
+<ul>
+<li><strong>入口层高可用</strong></li>
+<li><strong>业务层高可用</strong></li>
+<li><strong>缓存层高可用</strong></li>
+<li><strong>数据库高可用</strong></li>
+<li><strong>入口层可伸缩</strong></li>
+<li><strong>业务层可伸缩</strong></li>
+<li><strong>缓存层可伸缩</strong></li>
+<li><strong>数据库可伸缩</strong></li>
+</ul>
+<p><img src="http://images.royliu.me/webserver-ha-experience/1.jpg" alt="这里写图片描述"><br>下面来分层介绍实践方法。<br><a id="more"></a></p>
+<h2 id="入口层高可用"><a href="#入口层高可用" class="headerlink" title="入口层高可用"></a>入口层高可用</h2><p>nigix两个 keeplive保活 心跳做好。<br><img src="http://images.royliu.me/webserver-ha-experience/2.jpg" alt="这里写图片描述"></p>
+<ul>
+<li>使用心跳技术：keeplive提供这个技术</li>
+<li>比如机器A IP是1.2.3.4，机器B IP是1.2.3.5，那么再申请一个IP （1.2.3.6）我们称之为心跳IP，平时绑定再A上面，如果A宕机，那么IP会自动绑定到B上面</li>
+<li>DNS 层面绑定到心跳IP即可</li>
+<li>两台机器必须在同一网段</li>
+<li>服务监听必须监听所有IP，如果仅仅监听心跳IP，那么从机上的服务（不持有心跳IP的机器）会启动失败</li>
+<li>服务器利用率下降（混合部署可以改善这一点）</li>
+</ul>
+<p>考虑一个问题，两台机器，两个公网IP，DNS把域名同时定位到两个IP，这算高可用吗</p>
+<p>不算，客户端（比如浏览器） 解析完后会随机选一个 IP访问 ， 而不是一个失败后就去另一个 。 所以如果一台机器当机 ，那么就有一半左右的用户无法访问 。 </p>
+<h2 id="业务层高可用"><a href="#业务层高可用" class="headerlink" title="业务层高可用"></a>业务层高可用</h2><p><img src="http://images.royliu.me/webserver-ha-experience/3.jpg" alt="这里写图片描述"></p>
+<ul>
+<li>业务层不要有状态 ， 状态分散到缓存层和数据库层 。 只要没有状态，业务层的服务死掉后，前面的nginx会自动把流量打到剩下的服务 。 所以，业务层无状态是一个重点。</li>
+<li>友情提醒：不要因为想让服务无状态就直接用cookie session, 里边的坑有点大，考察清楚后再用比较好。比如重放攻击 。</li>
+</ul>
+<h2 id="缓存层高可用"><a href="#缓存层高可用" class="headerlink" title="缓存层高可用"></a>缓存层高可用</h2><p><img src="http://images.royliu.me/webserver-ha-experience/4.jpg" alt="这里写图片描述"></p>
+<ul>
+<li>缓存层分得细一点，保证单台缓存宕机后数据库还能撑得住 。 </li>
+<li>中小模下缓存层和业务层可以混合部署， 这样可以节省机器 </li>
+<li>大型规模网站，业务层和缓存层分开部署。</li>
+<li>缓存层高可用，缓存可以启用主从两台，主缓存活着的时候，主缓存读，主从缓存都写，主缓存宕机后，从变主，主恢复后， 变成新的从。这样可以保证数据完整性，实现高可用 </li>
+</ul>
+<h2 id="数据库高可用"><a href="#数据库高可用" class="headerlink" title="数据库高可用"></a>数据库高可用</h2><ul>
+<li>MySQL有主从模式， 还有主主模式都能满足你的需求</li>
+<li>MongoDB也有ReplicaSet的概念，基本都能满足大家的需求。 </li>
+</ul>
+<p>##高可用小结<br><img src="http://images.royliu.me/webserver-ha-experience/5.jpg" alt="这里写图片描述"></p>
+<p>##入口层可伸缩</p>
+<ul>
+<li>入囗层如何提供伸缩性？直接铺机器 ？然后DNS加IP就可以了吧？ </li>
+<li>可以，但也有需要注意的地方</li>
+<li>尽管一个域名解析到几十个IP没有问题，但是很浏览器客户端只会使用前面几个IP，部分域名供应商对此有优化（比如每次返回的IP顺序随机 ）， 但是这个优化效果不稳定。推荐的做法是使用少量的nginx机 器作为入囗，业务服务器隐藏在内网（HTTP类型的业务这种方式居多） </li>
+</ul>
+<p>##业务层可伸缩</p>
+<ul>
+<li>跟应付高可用一样，保证无状态是很好的手段。加机器继续水平部署即可。 </li>
+</ul>
+<p>##缓存层可伸缩</p>
+<ul>
+<li><p>直接用 codis或者redis 3.0 即可 </p>
+</li>
+<li><p>如果低峰期间数据库能抗的住 ，那么直接下线存然后上新缓存就是最简单有效的办法 </p>
+</li>
+</ul>
+<p>缓存类型 </p>
+<ul>
+<li>强一致性缓存： 无法接受从缓存中读取错误的数据（比如用户余额）</li>
+<li>弱一致性缓存：可以接受一段时间内的错误数据，例如微博转发数</li>
+<li>不变型缓存：缓存key对应的value不会变更<br>弱一致性和不变型缓存扩容很方便，用一致性HASH即可<br>###一致性HASH<br>在分布式集群中，对机器的添加删除，或者机器故障后自动脱离集群这些操作是分布式集群管理最基本的功能。如果采用常用的hash(object)%N算法，那么在有机器添加或者删除后，很多原有的数据就无法找到了，这样严重的违反了单调性原则<br>一致性HASH可以有效解决这个问题，一致性哈希算法在保持了单调性的同时，还是数据的迁移达到了最小，这样的算法对分布式集群来说是非常合适的，避免了大量数据迁移，减小了服务器的的压力。<br>举个例子<br>如果缓存从9台扩容到10台， 简单Hash况下90％的缓存会马上失效，而一致性Hash 情况下，只有10%的缓存会失效。</li>
+</ul>
+<p>###强一致缓存问题</p>
+<ul>
+<li>1.缓存客户端的配置更新时间会有微小的差异，在这个时间窗内有可能会拿到过期的数据。</li>
+<li>2.如果在扩充节点之后裁撤节点，会拿到脏数据。比如a这个key之前在机器1， 扩容后在机器2，数据更新了， 但裁撤节点后key回到机器1 这样就会有脏数据的问题</li>
+</ul>
+<p>问题二解决方法：要么保持永不减少节点，要么节点调整间隔大于数据有效时间。<br>问题一解决方法：</p>
+<ul>
+<li>两套hash配置都更新到客户端，但仍使用旧的配置</li>
+<li>两个个客户端改为只有两套hash结果一致的情况下会使用缓存，其余情况从数据库读，但写入缓存。</li>
+<li>逐个客户端通知使用新配置。</li>
+</ul>
+<p>##数据库可伸缩</p>
+<ul>
+<li>水平拆分</li>
+<li>垂直拆分</li>
+<li>定期滚动</li>
+</ul>
+<p><img src="http://images.royliu.me/webserver-ha-experience/6.jpg" alt="这里写图片描述"></p>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/高可用/" rel="tag"># 高可用</a>
+          
+            <a href="/tags/伸缩性/" rel="tag"># 伸缩性</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2016/06/19/java-memory-leak/" rel="next" title="java程序员--小心你代码中的内存泄漏">
+                <i class="fa fa-chevron-left"></i> java程序员--小心你代码中的内存泄漏
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2016/12/08/websocket-httpsession/" rel="prev" title="webscoket实战之利用httpsession定向推送">
+                webscoket实战之利用httpsession定向推送 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image" src="/images/myself.jpg" alt="roy liu">
+          <p class="site-author-name" itemprop="name">roy liu</p>
+           
+              <p class="site-description motion-element" itemprop="description">keep your dream alive</p>
+          
+        </div>
+        <nav class="site-state motion-element">
+
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives/">
+                <span class="site-state-item-count">29</span>
+                <span class="site-state-item-name">日志</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-categories">
+              <a href="/categories/index.html">
+                <span class="site-state-item-count">15</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-tags">
+              <a href="/tags/index.html">
+                <span class="site-state-item-count">34</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+        </div>
+
+        
+        
+
+        
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#入口层高可用"><span class="nav-number">1.</span> <span class="nav-text">入口层高可用</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#业务层高可用"><span class="nav-number">2.</span> <span class="nav-text">业务层高可用</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#缓存层高可用"><span class="nav-number">3.</span> <span class="nav-text">缓存层高可用</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#数据库高可用"><span class="nav-number">4.</span> <span class="nav-text">数据库高可用</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">roy liu</span>
+</div>
+
+
+<div class="powered-by">
+  由 <a class="theme-link" href="https://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Pisces
+  </a>
+</div>
+
+
+        
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.1"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.1"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.1"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.1"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.1"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.1"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.1"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

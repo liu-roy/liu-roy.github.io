@@ -1,0 +1,763 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.1" rel="stylesheet" type="text/css">
+
+
+  <meta name="keywords" content="c++,sqlite3,">
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.1">
+
+
+
+
+
+
+<meta name="description" content="sqlite3的图片的（二进制数据）存取操作&amp;emsp; 前言上篇介绍了sqlite3的一些常用插入操作方法和注意事项，在实际项目中遇到了图片缓存的问题，由于服务器不是很稳定，且受到外界环境的干扰（例如断电，图片存储挂掉，图片存储速度过慢，造成的接口调用失败等等），一个数据结构中除了普通字段（int string），还包括图片数据，所以还需要将图片数据进行缓存，图片缓存与普通的数据库字段值缓存有所">
+<meta name="keywords" content="c++,sqlite3">
+<meta property="og:type" content="article">
+<meta property="og:title" content="sqlite3的图片的（二进制数据）存取操作">
+<meta property="og:url" content="http://yoursite.com/2015/08/18/sqlite3-store-pic/index.html">
+<meta property="og:site_name" content="freedom">
+<meta property="og:description" content="sqlite3的图片的（二进制数据）存取操作&amp;emsp; 前言上篇介绍了sqlite3的一些常用插入操作方法和注意事项，在实际项目中遇到了图片缓存的问题，由于服务器不是很稳定，且受到外界环境的干扰（例如断电，图片存储挂掉，图片存储速度过慢，造成的接口调用失败等等），一个数据结构中除了普通字段（int string），还包括图片数据，所以还需要将图片数据进行缓存，图片缓存与普通的数据库字段值缓存有所">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="http://images.royliu.me/sqlite3-store-pic/1.jpg">
+<meta property="og:image" content="http://images.royliu.me/sqlite3-store-pic/2.jpg">
+<meta property="og:updated_time" content="2020-04-09T07:16:05.586Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="sqlite3的图片的（二进制数据）存取操作">
+<meta name="twitter:description" content="sqlite3的图片的（二进制数据）存取操作&amp;emsp; 前言上篇介绍了sqlite3的一些常用插入操作方法和注意事项，在实际项目中遇到了图片缓存的问题，由于服务器不是很稳定，且受到外界环境的干扰（例如断电，图片存储挂掉，图片存储速度过慢，造成的接口调用失败等等），一个数据结构中除了普通字段（int string），还包括图片数据，所以还需要将图片数据进行缓存，图片缓存与普通的数据库字段值缓存有所">
+<meta name="twitter:image" content="http://images.royliu.me/sqlite3-store-pic/1.jpg">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    sidebar: {"position":"left","display":"post","offset":12,"offset_float":0,"b2t":false,"scrollpercent":false},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2015/08/18/sqlite3-store-pic/">
+
+
+
+
+
+  <title>sqlite3的图片的（二进制数据）存取操作 | freedom</title>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">freedom</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">Coding changes the world</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br>
+            
+            关于
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-commonweal">
+          <a href="/404.html" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-heartbeat"></i> <br>
+            
+            公益404
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2015/08/18/sqlite3-store-pic/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="roy liu">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/myself.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="freedom">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">sqlite3的图片的（二进制数据）存取操作</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2015-08-18T21:54:02+08:00">
+                2015-08-18
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/sqlite3/" itemprop="url" rel="index">
+                    <span itemprop="name">sqlite3</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="sqlite3的图片的（二进制数据）存取操作"><a href="#sqlite3的图片的（二进制数据）存取操作" class="headerlink" title="sqlite3的图片的（二进制数据）存取操作"></a>sqlite3的图片的（二进制数据）存取操作</h1><p>&emsp;</p>
+<h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>上篇介绍了<strong>sqlite3</strong>的一些常用插入操作方法和注意事项，在实际项目中遇到了图片缓存的问题，由于服务器不是很稳定，且受到外界环境的干扰（例如断电，图片存储挂掉，图片存储速度过慢，造成的接口调用失败等等），一个数据结构中除了普通字段（int string），还包括图片数据，所以还需要将图片数据进行缓存，图片缓存与普通的数据库字段值缓存有所不同，下面介绍一下简单方法。</p>
+<h2 id="开发示例"><a href="#开发示例" class="headerlink" title="开发示例"></a>开发示例</h2><p>此demo仅供学习使用。</p>
+<p>sqlite3支持对二进制数据的缓存，在实际的编程开发当中我们经常要处理一些大容量二进制数据的存储，如图片、音乐、视频等等。对于这些二进制数据，我们不能像处理普通的文本那样，但是我们可以用<strong>blob</strong>来存储。sqlite官方文档<a href="https://www.sqlite.org/datatype3.html#section_1" target="_blank" rel="noopener">https://www.sqlite.org/datatype3.html#section_1</a>对<strong>blob</strong> 字段的解释是</p>
+<blockquote>
+<p> BLOB. The value is a blob of data, stored exactly as it was input。 </p>
+</blockquote>
+<p>即数据不做任何转换，以输入形式存储。因此 BOLB通常用来存储二进制大对象。<br><a id="more"></a></p>
+<h2 id="sqlite3-bind-blob示例代码"><a href="#sqlite3-bind-blob示例代码" class="headerlink" title="sqlite3_bind_blob示例代码"></a>sqlite3_bind_blob示例代码</h2><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">char</span>* cmdCreatBlobTable = <span class="string">"create table SqliteBlobTest (id integer , pic blob);  //首先创建一个可插入blob类型的表 。</span></span><br><span class="line"><span class="string">sqlite3* db = NULL;</span></span><br><span class="line"><span class="string">char * errorMessage = NULL;</span></span><br><span class="line"><span class="string">int iResult = sqlite3_open("</span>SqliteTest.db<span class="string">", &amp;db);</span></span><br><span class="line"><span class="string">sqlite3_exec(db,"</span>drop table <span class="keyword">if</span> exists SqliteBlobTest<span class="string">",0,0,0);  </span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">iResult = sqlite3_exec(db, cmdCreatBlobTable, NULL, NULL, &amp;errorMessage);</span></span><br><span class="line"><span class="string">if (SQLITE_OK != iResult)</span></span><br><span class="line"><span class="string">&#123;</span></span><br><span class="line"><span class="string">    cout&lt;&lt;"</span>创建表SqliteBlobTest失败<span class="string">"&lt;&lt;endl;</span></span><br><span class="line"><span class="string">    break;</span></span><br><span class="line"><span class="string">&#125;</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">sqlite3_stmt *stmt;                                            //声明</span></span><br><span class="line"><span class="string">const char* sql = "</span>insert into SqliteBlobTest values(<span class="number">1</span>,?)<span class="string">";  </span></span><br><span class="line"><span class="string">char* pPicData = "</span><span class="keyword">this</span> is a pic data<span class="string">" ;</span></span><br><span class="line"><span class="string">sqlite3_prepare(db,sql,strlen(sql),&amp;stmt,0);                   //完成对sql语句的解析</span></span><br><span class="line"><span class="string">&#123;  </span></span><br><span class="line"><span class="string">    sqlite3_bind_blob(stmt,1,pPicData, strlen(pPicData), NULL);//1代表第一个？</span></span><br><span class="line"><span class="string">    sqlite3_step(stmt);                                        //将数据写入数据库中</span></span><br><span class="line"><span class="string">&#125; </span></span><br><span class="line"><span class="string">sqlite3_prepare(db, "</span>select * from SqliteBlobTest<span class="string">", -1, &amp;stmt, 0);</span></span><br><span class="line"><span class="string">int result = sqlite3_step(stmt);</span></span><br><span class="line"><span class="string">int id = 0,len = 0; </span></span><br><span class="line"><span class="string">char picData[128] = &#123;0&#125;; </span></span><br><span class="line"><span class="string">if (result == SQLITE_ROW)                                     //查询成功返回的是SQLITE_ROW</span></span><br><span class="line"><span class="string">&#123;</span></span><br><span class="line"><span class="string">    cout&lt;&lt;"</span>read success from sqlite<span class="string">"&lt;&lt;endl;</span></span><br><span class="line"><span class="string">    id = sqlite3_column_int(stmt, 0);                         //从0开始计算，id为0，picdata 为1；</span></span><br><span class="line"><span class="string">    const void * pReadPicData = sqlite3_column_blob(stmt, 1); //读取数据，返回一个指针</span></span><br><span class="line"><span class="string">    len = sqlite3_column_bytes(stmt, 1);                      //返回数据大小</span></span><br><span class="line"><span class="string">    memcpy(picData, pReadPicData, len);                       //把数据拷贝出来</span></span><br><span class="line"><span class="string">&#125;</span></span><br><span class="line"><span class="string">else</span></span><br><span class="line"><span class="string">&#123;</span></span><br><span class="line"><span class="string">    cout&lt;&lt;"</span>read fail from sqlite<span class="string">"&lt;&lt;endl;</span></span><br><span class="line"><span class="string">&#125;</span></span><br><span class="line"><span class="string">sqlite3_finalize(stmt);                                      //把刚才分配的内容析构掉</span></span><br><span class="line"><span class="string">cout&lt;&lt;id&lt;&lt;"</span> <span class="string">"&lt;&lt;picData&lt;&lt;endl;</span></span><br></pre></td></tr></table></figure>
+<h3 id="测试结果"><a href="#测试结果" class="headerlink" title="测试结果"></a>测试结果</h3><p><img src="http://images.royliu.me/sqlite3-store-pic/1.jpg" alt="这里写图片描述"><br><img src="http://images.royliu.me/sqlite3-store-pic/2.jpg" alt="这里写图片描述"></p>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>经过这一个月工作之余的优化，终于把项目的缓存给做好了，其中也遇到了很多问题，例如sqlite的编码转换，图片缓存速度慢，还有db-journal文件操作慢，以及如何直观的让sqliteDb大小自动展现，自己也是查了官方英文文档才一步步解决各种坑。总结的好处就在于能够温故知新。</p>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/c/" rel="tag"># c++</a>
+          
+            <a href="/tags/sqlite3/" rel="tag"># sqlite3</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2015/03/18/cpp-singleton-gc/" rel="next" title="c++ 单例模式的实例自动销毁">
+                <i class="fa fa-chevron-left"></i> c++ 单例模式的实例自动销毁
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2015/10/20/sqlite3-insert-perform-test/" rel="prev" title="Sqlite3常用的插入方法及性能测试">
+                Sqlite3常用的插入方法及性能测试 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image" src="/images/myself.jpg" alt="roy liu">
+          <p class="site-author-name" itemprop="name">roy liu</p>
+           
+              <p class="site-description motion-element" itemprop="description">keep your dream alive</p>
+          
+        </div>
+        <nav class="site-state motion-element">
+
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives/">
+                <span class="site-state-item-count">29</span>
+                <span class="site-state-item-name">日志</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-categories">
+              <a href="/categories/index.html">
+                <span class="site-state-item-count">15</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-tags">
+              <a href="/tags/index.html">
+                <span class="site-state-item-count">34</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+        </div>
+
+        
+        
+
+        
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#sqlite3的图片的（二进制数据）存取操作"><span class="nav-number">1.</span> <span class="nav-text">sqlite3的图片的（二进制数据）存取操作</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#前言"><span class="nav-number">1.1.</span> <span class="nav-text">前言</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#开发示例"><span class="nav-number">1.2.</span> <span class="nav-text">开发示例</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#sqlite3-bind-blob示例代码"><span class="nav-number">1.3.</span> <span class="nav-text">sqlite3_bind_blob示例代码</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#测试结果"><span class="nav-number">1.3.1.</span> <span class="nav-text">测试结果</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#总结"><span class="nav-number">1.4.</span> <span class="nav-text">总结</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">roy liu</span>
+</div>
+
+
+<div class="powered-by">
+  由 <a class="theme-link" href="https://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Pisces
+  </a>
+</div>
+
+
+        
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.1"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.1"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.1"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.1"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.1"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.1"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.1"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

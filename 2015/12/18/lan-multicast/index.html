@@ -1,0 +1,774 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.1" rel="stylesheet" type="text/css">
+
+
+  <meta name="keywords" content="自发现,多播,">
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.1">
+
+
+
+
+
+
+<meta name="description" content="转自http://www.51cto.com/specbook/17/35216.htm 在局域网中，管理员常常需要将某条信息发送给一组用户。如果使用一对一的发送方法，虽然是可行的，但是过于麻烦，也常会出现漏发、错发。为了更有效的解决这种组通信问题，出现了一种多播技术（也常称为组播通信），它是基于IP层的通信技术。为了帮助读者理解，下面将简要的介绍一下多播的概念。众所周知，普通IP通信是在一个发送">
+<meta name="keywords" content="自发现,多播">
+<meta property="og:type" content="article">
+<meta property="og:title" content="C++实现局域网IP多播">
+<meta property="og:url" content="http://yoursite.com/2015/12/18/lan-multicast/index.html">
+<meta property="og:site_name" content="freedom">
+<meta property="og:description" content="转自http://www.51cto.com/specbook/17/35216.htm 在局域网中，管理员常常需要将某条信息发送给一组用户。如果使用一对一的发送方法，虽然是可行的，但是过于麻烦，也常会出现漏发、错发。为了更有效的解决这种组通信问题，出现了一种多播技术（也常称为组播通信），它是基于IP层的通信技术。为了帮助读者理解，下面将简要的介绍一下多播的概念。众所周知，普通IP通信是在一个发送">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:updated_time" content="2020-04-09T07:16:05.582Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="C++实现局域网IP多播">
+<meta name="twitter:description" content="转自http://www.51cto.com/specbook/17/35216.htm 在局域网中，管理员常常需要将某条信息发送给一组用户。如果使用一对一的发送方法，虽然是可行的，但是过于麻烦，也常会出现漏发、错发。为了更有效的解决这种组通信问题，出现了一种多播技术（也常称为组播通信），它是基于IP层的通信技术。为了帮助读者理解，下面将简要的介绍一下多播的概念。众所周知，普通IP通信是在一个发送">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    sidebar: {"position":"left","display":"post","offset":12,"offset_float":0,"b2t":false,"scrollpercent":false},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2015/12/18/lan-multicast/">
+
+
+
+
+
+  <title>C++实现局域网IP多播 | freedom</title>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">freedom</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">Coding changes the world</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br>
+            
+            关于
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-commonweal">
+          <a href="/404.html" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-heartbeat"></i> <br>
+            
+            公益404
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2015/12/18/lan-multicast/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="roy liu">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/myself.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="freedom">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">C++实现局域网IP多播</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2015-12-18T10:54:30+08:00">
+                2015-12-18
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/网络/" itemprop="url" rel="index">
+                    <span itemprop="name">网络</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>转自<a href="http://www.51cto.com/specbook/17/35216.htm" target="_blank" rel="noopener">http://www.51cto.com/specbook/17/35216.htm</a></p>
+<p>在局域网中，管理员常常需要将某条信息发送给一组用户。如果使用一对一的发送方法，虽然是可行的，但是过于麻烦，也常会出现漏发、错发。为了更有效的解决这种组通信问题，出现了一种多播技术（也常称为组播通信），它是基于IP层的通信技术。为了帮助读者理解，下面将简要的介绍一下多播的概念。众所周知，普通IP通信是在一个发送者和一个接收者之间进行的，我们常把它称为点对点的通信，但对于有些应用，这种点对点的通信模式不能有效地满足实际应用的需求。例如：一个数字电话会议系统由多个会场组成，当在其中一个会场的参会人发言时，要求其它会场都能即时的得到此发言的内容，这是一个典型的一对多的通信应用，通常把这种一对多的通信称为多播通信。采用多播通信技术，不仅可以实现一个发送者和多个接收者之间进行通信的功能，而且可以有效减轻网络通信的负担，避免资源的无谓浪费。<br><a id="more"></a><br>广播也是一种实现一对多数据通信的模式，但广播与多播在实现方式上有所不同。广播是将数据从一个工作站发出，局域网内的其他所有工作站都能收到它。这一特征适用于无连接协议，因为LAN上的所有机器都可获得并处理广播消息。使用广播消息的不利之处是每台机器都必须对该消息进行处理。多播通信则不同，数据从一个工作站发出后，如果在其它LAN上的机器上面运行的进程表示对这些数据“有兴趣”，多播数据才会制给它们。  </p>
+<p>本实例由Sender和Receiver两个程序组成，Sender用户从控制台上输入多播发送数据，Receiver端都要求加入同一个多播组，完成接收Sender发送的多播数据。</p>
+<h2 id="一、实现方法"><a href="#一、实现方法" class="headerlink" title="一、实现方法"></a>一、实现方法</h2><h3 id="1、协议支持"><a href="#1、协议支持" class="headerlink" title="1、协议支持"></a>1、协议支持</h3><p>并不是所有的协议都支持多播通信，对Win32平台而言，仅两种可从WinSock内访问的协议（IP/ATM）才提供了对多播通信的支持。因通常通信应用都建立在TCP/IP协议之上的，所以本文只针对IP协议来探讨多播通信技术。<br>支持多播通信的平台包括Windows CE 2.1、Windows 95、Windows 98、Windows NT 4、Windows 2000和WindowsXP。自2.1版开始，Windows CE才开始实现对IP多播的支持。本文实例建立在WindowsXP专业版平台上。</p>
+<h3 id="2、多播地址"><a href="#2、多播地址" class="headerlink" title="2、多播地址"></a>2、多播地址</h3><p>IP采用D类地址来支持多播。每个D类地址代表一组主机。共有28位可用来标识小组。所以可以同时有多达25亿个小组。当一个进程向一个D类地址发送分组时，会尽最大的努力将它送给小组的所有成员，但不能保证全部送到。有些成员可能收不到这个分组。举个例子来说，假定五个节点都想通过I P多播，实现彼此间的通信，它们便可加入同一个组地址。全部加入之后，由一个节点发出的任何数据均会一模一样地复制一份，发给组内的每个成员，甚至包括始发数据的那个节点。D类I P地址范围在244.0.0.0到239.255.255.255之间。它分为两类：永久地址和临时地址。永久地址是为特殊用途而保留的。比如，244.0.0.0根本没有使用（也不能使用），244.0.0.1代表子网内的所有系统（主机），而244.0.0.2代表子网内的所有路由器。在RFC 1700文件中，提供了所有保留地址的一个详细清单。该文件是为特殊用途保留的所有资源的一个列表，大家可以找来作为参考。”Internet分配数字专家组”（I A N A）负责着这个列表的维护。在表1中，我们总结了目前标定为”保留”的一些地址。临时组地址在使用前必须先创建，一个进程可以要求其主机加入特定的组，它也能要求其主机脱离该组。当主机上的最后一个进程脱离某个组后，该组地址就不再在这台主机中出现。每个主机都要记录它的进程当前属于哪个组。表1部分永久地址说明：</p>
+<p>地 址    说 明<br>244.0.0.1    基本地址（保留）<br>244.0.0.1    子网上的所有系统<br>244.0.0.2    子网上的所有路由器<br>244.0.0.5    子网上所有OSPF路由器<br>244.0.0.6    子网上所有指定的OSPF路由器<br>244.0.0.9    RIP第2版本组地址<br>244.0.1.1    网络时间协议<br>244.0.1.24    WINS服务器组地址</p>
+<h3 id="3、多播路由器"><a href="#3、多播路由器" class="headerlink" title="3、多播路由器"></a>3、多播路由器</h3><p>多播由特殊的多播路由器来实现，多播路由器同时也可以是普通路由器。各个多播路由器每分钟发送一个硬件多播信息给子网上的主机(目的地址为244.0.0.1)，要求它们报告其进程当前所属的是哪一组，各主机将它感兴趣的D类地址返回。这些询问和响应分组使用IGMP（Internet group management protocol），它大致类似于ICMP。它只有两种分组：询问和响应，都有一个简单的固定格式，其中有效载荷字段的第一个字段是一些控制信息，第二字段是一个D类地址，在RFC1112中有详细说明。<br>多播路由器的选择是通过生成树实现的，每个多播路由器采用修改过的距离矢量协议和其邻居交换信息，以便向每个路由器为每一组构造一个覆盖所有组员的生成树。在修剪生成树及删除无关路由器和网络时，用到了很多优化方法。</p>
+<h3 id="4、库支持"><a href="#4、库支持" class="headerlink" title="4、库支持"></a>4、库支持</h3><p>WinSock提供了实现多播通信的API函数调用。针对IP多播，WinSock提供了两种不同的实现方法，具体取决于使用的是哪个版本的WinSock。第一种方法是WinSock1提供的，要求通过套接字选项来加入一个组；另一种方法是WinSock2提供的，它是引入一个新函数，专门负责多播组的加入，这个函数便是WSAJoinLeaf，它是基层协议是无关的。本文将通过一个多播通信的实例的实现过程，来讲叙多播实现的主要步骤。因为Window98以后版本都安装了Winsock2.0以上版本，所以本文实例在WinSock2.0平台上开发的，但在其中对WinSock1实现不同的地方加以说明。</p>
+<h2 id="二、编程步骤"><a href="#二、编程步骤" class="headerlink" title="二、编程步骤"></a>二、编程步骤</h2><h3 id="1、启动Visual-C-6-0，创建一个控制台项目工程MultiCase。在此项目工程中添加Sender和Receiver两个项目。"><a href="#1、启动Visual-C-6-0，创建一个控制台项目工程MultiCase。在此项目工程中添加Sender和Receiver两个项目。" class="headerlink" title="1、启动Visual C++6.0，创建一个控制台项目工程MultiCase。在此项目工程中添加Sender和Receiver两个项目。"></a>1、启动Visual C++6.0，创建一个控制台项目工程MultiCase。在此项目工程中添加Sender和Receiver两个项目。</h3><p>Receiver项目实现步骤：</p>
+<blockquote>
+<ul>
+<li>(1)、创建一个SOCK_DGRAM类型的Socket。</li>
+<li>(2)、将此Socket绑定到本地的一个端口上，为了接收服务器端发送的多播数据。</li>
+<li>(3)、加入多播组。</li>
+<li>(4)、接收多播数据</li>
+</ul>
+</blockquote>
+<p>####①、WinSock2中引入一个WSAJoinLeaf，此函数原型如下：<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="function">SOCKET <span class="title">WSAJoinLeaf</span><span class="params">( SOCKET s, <span class="keyword">const</span> struct sockaddr FAR *name, <span class="keyword">int</span> namelen, </span></span></span><br><span class="line"><span class="function"><span class="params">LPWSABUF lpCallerData, LPWSABUF lpCalleeData, LPQOS lpSQOS, </span></span></span><br><span class="line"><span class="function"><span class="params"></span></span></span><br><span class="line"><span class="function"><span class="params">        LPQOS lpGQOS, DWORD dwFlags )</span></span>;</span><br></pre></td></tr></table></figure></p>
+<p>其中，第一个参数s代表一个套接字句柄，是自WSASocket返回的。传递进来的这个套接字必须使用恰当的多播标志进行创建；否则的话WSAJoinLeaf就会失败，并返回错误WSAEINVAL。第二个参数是SOCKADDR（套接字地址）结构，具体内容由当前采用的协议决定，对于IP协议来说，这个地址指定的是主机打算加入的那个多播组。第三个参数namelen（名字长度）是用于指定name参数的长度，以字节为单位。第四个参数lpCallerData（呼叫者数据）的作用是在会话建立之后，将一个数据缓冲区传输给自己通信的对方。第五个参数lpCalleeData（被叫者数据）用于初始化一个缓冲区，在会话建好之后，接收来自对方的数据。注意在当前的Windows平台上，lpCallerData和lpCalleeData这两个参数并未真正实现，所以均应设为NULL。LpSQOS和lpGQOS这两个参数是有关Qos（服务质量）的设置，通常也设为NULL，有关Qos内容请参阅MSDN或有关书籍。最后一个参数dwFlags指出该主机是发送数据、接收数据或收发兼并。该参数可选值分别是：JL_SENDER_ONLY、JL_RECEIVER_ONLY或者JL_BOTH。</p>
+<p>####②、在WinSock1平台上加入多播组需要调用setsockopt函数，同时设置IP_ADD_MEMBERSHIP选项，指定想加入的那个组的地址结构。具体实现代码将在下面代码注释列出。</p>
+<h3 id="2、Sender实现步骤："><a href="#2、Sender实现步骤：" class="headerlink" title="2、Sender实现步骤："></a>2、Sender实现步骤：</h3><p>(1)、创建一个SOCK_DGRAM类型的Socket。<br>(2)、加入多播组。<br>(3)、发送多播数据。</p>
+<h3 id="3、编译两个项目，在局域网中按如下步骤测试："><a href="#3、编译两个项目，在局域网中按如下步骤测试：" class="headerlink" title="3、编译两个项目，在局域网中按如下步骤测试："></a>3、编译两个项目，在局域网中按如下步骤测试：</h3><p>(1)、将Sender.exe拷贝到发送多播数据的ＰＣ上。<br>(2)、将Receiver.exe拷贝到多个要求接收多播数据的ＰＣ上。<br>(3)、各自运行相应的程序。<br>(4)、在Sender PC上输入多播数据后，你就可以在Receiver PC上看到输入的多播数据。</p>
+<h2 id="三、程序代码"><a href="#三、程序代码" class="headerlink" title="三、程序代码"></a>三、程序代码</h2><h3 id="Receiver-c程序代码"><a href="#Receiver-c程序代码" class="headerlink" title="Receiver.c程序代码"></a>Receiver.c程序代码</h3><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;winsock2.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;ws2tcpip.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;stdio.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;stdlib.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> MCASTADDR <span class="meta-string">"233.0.0.1"</span> <span class="comment">//本例使用的多播组地址。</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> MCASTPORT 5150 <span class="comment">//绑定的本地端口号。</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> BUFSIZE 1024 <span class="comment">//接收数据缓冲大小。</span></span></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">( <span class="keyword">int</span> argc,<span class="keyword">char</span> ** argv)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">　WSADATA wsd;</span><br><span class="line">　<span class="class"><span class="keyword">struct</span> <span class="title">sockaddr_in</span> <span class="title">local</span>,<span class="title">remote</span>,<span class="title">from</span>;</span></span><br><span class="line">　SOCKET sock,sockM;</span><br><span class="line">　TCHAR recvbuf[BUFSIZE];</span><br><span class="line">　<span class="comment">/*struct ip_mreq mcast; // Winsock1.0 */</span></span><br><span class="line"></span><br><span class="line">　<span class="keyword">int</span> len = <span class="keyword">sizeof</span>( struct sockaddr_in);</span><br><span class="line">　<span class="keyword">int</span> ret;</span><br><span class="line">　<span class="comment">//初始化WinSock2.2</span></span><br><span class="line">　<span class="keyword">if</span>( WSAStartup( MAKEWORD(<span class="number">2</span>,<span class="number">2</span>),&amp;wsd) != <span class="number">0</span> )</span><br><span class="line">　&#123;</span><br><span class="line">　　<span class="built_in">printf</span>(<span class="string">"WSAStartup() failed\n"</span>);</span><br><span class="line">　　<span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">　&#125;</span><br><span class="line">　<span class="comment">/*</span></span><br><span class="line"><span class="comment">　创建一个SOCK_DGRAM类型的SOCKET</span></span><br><span class="line"><span class="comment">　其中,WSA_FLAG_MULTIPOINT_C_LEAF表示IP多播在控制面层上属于"无根"类型;</span></span><br><span class="line"><span class="comment">　WSA_FLAG_MULTIPOINT_D_LEAF表示IP多播在数据面层上属于"无根",有关控制面层和</span></span><br><span class="line"><span class="comment">　数据面层有关概念请参阅MSDN说明。</span></span><br><span class="line"><span class="comment">　*/</span></span><br><span class="line">　<span class="keyword">if</span>((sock=WSASocket(AF_INET,SOCK_DGRAM,<span class="number">0</span>,<span class="literal">NULL</span>,<span class="number">0</span>,</span><br><span class="line">　　WSA_FLAG_MULTIPOINT_C_LEAF|WSA_FLAG_MULTIPOINT_D_LEAF|</span><br><span class="line">　　WSA_FLAG_OVERLAPPED)) == INVALID_SOCKET)</span><br><span class="line">　&#123;</span><br><span class="line">　　<span class="built_in">printf</span>(<span class="string">"socket failed with:%d\n"</span>,WSAGetLastError());</span><br><span class="line">　　WSACleanup();</span><br><span class="line">　　<span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">　&#125;</span><br><span class="line">　<span class="comment">//将sock绑定到本机某端口上。</span></span><br><span class="line">　local.sin_family = AF_INET;</span><br><span class="line">　local.sin_port = htons(MCASTPORT);</span><br><span class="line">　local.sin_addr.s_addr = INADDR_ANY;</span><br><span class="line">　<span class="keyword">if</span>( bind(sock,(struct sockaddr*)&amp;local,<span class="keyword">sizeof</span>(local)) == SOCKET_ERROR )</span><br><span class="line">　&#123;</span><br><span class="line">　　<span class="built_in">printf</span>( <span class="string">"bind failed with:%d \n"</span>,WSAGetLastError());</span><br><span class="line">　　closesocket(sock);</span><br><span class="line">　　WSACleanup();</span><br><span class="line">　　<span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">　&#125;</span><br><span class="line">　<span class="comment">//加入多播组</span></span><br><span class="line">　remote.sin_family = AF_INET;</span><br><span class="line">　remote.sin_port = htons(MCASTPORT);</span><br><span class="line">　remote.sin_addr.s_addr = inet_addr( MCASTADDR );</span><br><span class="line">　<span class="comment">/* Winsock1.0 */</span></span><br><span class="line">　<span class="comment">/*</span></span><br><span class="line"><span class="comment">　mcast.imr_multiaddr.s_addr = inet_addr(MCASTADDR);</span></span><br><span class="line"><span class="comment">　mcast.imr_interface.s_addr = INADDR_ANY;</span></span><br><span class="line"><span class="comment">　if( setsockopt(sockM,IPPROTO_IP,IP_ADD_MEMBERSHIP,(char*)&amp;mcast,</span></span><br><span class="line"><span class="comment"></span></span><br><span class="line"><span class="comment">            sizeof(mcast)) == SOCKET_ERROR)</span></span><br><span class="line"><span class="comment">　&#123;</span></span><br><span class="line"><span class="comment">　　printf("setsockopt(IP_ADD_MEMBERSHIP) failed:%d\n",WSAGetLastError());</span></span><br><span class="line"><span class="comment">　　closesocket(sockM);</span></span><br><span class="line"><span class="comment">　　WSACleanup();</span></span><br><span class="line"><span class="comment">　　return -1;</span></span><br><span class="line"><span class="comment">　&#125;</span></span><br><span class="line"><span class="comment">　*/</span></span><br><span class="line">　<span class="comment">/* Winsock2.0*/</span></span><br><span class="line">　<span class="keyword">if</span>(( sockM = WSAJoinLeaf(sock,(SOCKADDR*)&amp;remote,<span class="keyword">sizeof</span>(remote),</span><br><span class="line"></span><br><span class="line">             <span class="literal">NULL</span>,<span class="literal">NULL</span>,<span class="literal">NULL</span>,<span class="literal">NULL</span>,</span><br><span class="line">JL_BOTH)) == INVALID_SOCKET)</span><br><span class="line">　&#123;</span><br><span class="line">　　<span class="built_in">printf</span>(<span class="string">"WSAJoinLeaf() failed:%d\n"</span>,WSAGetLastError());</span><br><span class="line">　　closesocket(sock);</span><br><span class="line">　　WSACleanup();</span><br><span class="line">　　<span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">　&#125;</span><br><span class="line">　<span class="comment">//接收多播数据，当接收到的数据为"QUIT"时退出。</span></span><br><span class="line">　<span class="keyword">while</span>(<span class="number">1</span>)</span><br><span class="line">　&#123;</span><br><span class="line">　　<span class="keyword">if</span>(( ret = recvfrom(sock,recvbuf,BUFSIZE,<span class="number">0</span>,</span><br><span class="line"></span><br><span class="line">            (struct sockaddr*)&amp;from,&amp;len)) == SOCKET_ERROR)</span><br><span class="line">　　&#123;</span><br><span class="line">　　　<span class="built_in">printf</span>(<span class="string">"recvfrom failed with:%d\n"</span>,WSAGetLastError());</span><br><span class="line">　　　closesocket(sockM);</span><br><span class="line">　　　closesocket(sock);</span><br><span class="line">　　　WSACleanup();</span><br><span class="line">　　　<span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">　　&#125;</span><br><span class="line">　　<span class="keyword">if</span>( <span class="built_in">strcmp</span>(recvbuf,<span class="string">"QUIT"</span>) == <span class="number">0</span> ) <span class="keyword">break</span>;</span><br><span class="line">　　<span class="keyword">else</span> &#123;</span><br><span class="line">　　　recvbuf[ret] = <span class="string">'\0'</span>;</span><br><span class="line">　　　<span class="built_in">printf</span>(<span class="string">"RECV:' %s ' FROM &lt;%s&gt; \n"</span>,recvbuf,inet_ntoa(from.sin_addr));</span><br><span class="line">　　&#125;</span><br><span class="line">　&#125;</span><br><span class="line"></span><br><span class="line">　closesocket(sockM);</span><br><span class="line">　closesocket(sock);</span><br><span class="line">　WSACleanup();</span><br><span class="line">　<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="Sender-c程序代码"><a href="#Sender-c程序代码" class="headerlink" title="Sender.c程序代码"></a>Sender.c程序代码</h3><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;winsock2.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;ws2tcpip.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;stdio.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;stdlib.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> MCASTADDR <span class="meta-string">"233.0.0.1"</span> <span class="comment">//本例使用的多播组地址。</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> MCASTPORT 5150 <span class="comment">//本地端口号。</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> BUFSIZE 1024 <span class="comment">//发送数据缓冲大小。</span></span></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">( <span class="keyword">int</span> argc,<span class="keyword">char</span> ** argv)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">　WSADATA wsd;</span><br><span class="line">　<span class="class"><span class="keyword">struct</span> <span class="title">sockaddr_in</span> <span class="title">remote</span>;</span></span><br><span class="line">　SOCKET sock,sockM;</span><br><span class="line">　TCHAR sendbuf[BUFSIZE];</span><br><span class="line">　<span class="keyword">int</span> len = <span class="keyword">sizeof</span>( struct sockaddr_in);</span><br><span class="line">　<span class="comment">//初始化WinSock2.2</span></span><br><span class="line">　<span class="keyword">if</span>( WSAStartup( MAKEWORD(<span class="number">2</span>,<span class="number">2</span>),&amp;wsd) != <span class="number">0</span> )</span><br><span class="line">　&#123;</span><br><span class="line">　　<span class="built_in">printf</span>(<span class="string">"WSAStartup() failed\n"</span>);</span><br><span class="line">　　<span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">　&#125;</span><br><span class="line">　<span class="keyword">if</span>((sock=WSASocket(AF_INET,SOCK_DGRAM,<span class="number">0</span>,<span class="literal">NULL</span>,<span class="number">0</span>,</span><br><span class="line">　　WSA_FLAG_MULTIPOINT_C_LEAF|WSA_FLAG_MULTIPOINT_D_LEAF|</span><br><span class="line">　　WSA_FLAG_OVERLAPPED)) == INVALID_SOCKET)</span><br><span class="line">　&#123;</span><br><span class="line">　　<span class="built_in">printf</span>(<span class="string">"socket failed with:%d\n"</span>,WSAGetLastError());</span><br><span class="line">　　WSACleanup();</span><br><span class="line">　　<span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">　&#125;</span><br><span class="line">　<span class="comment">//加入多播组</span></span><br><span class="line">　remote.sin_family = AF_INET;</span><br><span class="line">　remote.sin_port = htons(MCASTPORT);</span><br><span class="line">　remote.sin_addr.s_addr = inet_addr( MCASTADDR );</span><br><span class="line">　<span class="keyword">if</span>(( sockM = WSAJoinLeaf(sock,(SOCKADDR*)&amp;remote,</span><br><span class="line">　　<span class="keyword">sizeof</span>(remote),<span class="literal">NULL</span>,<span class="literal">NULL</span>,<span class="literal">NULL</span>,<span class="literal">NULL</span>,</span><br><span class="line">　　JL_BOTH)) == INVALID_SOCKET)</span><br><span class="line">　&#123;</span><br><span class="line">　　<span class="built_in">printf</span>(<span class="string">"WSAJoinLeaf() failed:%d\n"</span>,WSAGetLastError());</span><br><span class="line">　　closesocket(sock);</span><br><span class="line">　　WSACleanup();</span><br><span class="line">　　<span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">　&#125;</span><br><span class="line"></span><br><span class="line">　<span class="comment">//发送多播数据，当用户在控制台输入"QUIT"时退出。</span></span><br><span class="line">　<span class="keyword">while</span>(<span class="number">1</span>)</span><br><span class="line">　&#123;</span><br><span class="line">　　<span class="built_in">printf</span>(<span class="string">"SEND : "</span>);</span><br><span class="line">　　<span class="built_in">scanf</span>(<span class="string">"%s"</span>,sendbuf);</span><br><span class="line">　　<span class="keyword">if</span>( sendto(sockM,(<span class="keyword">char</span>*)sendbuf,<span class="built_in">strlen</span>(sendbuf),<span class="number">0</span>,(struct sockaddr*)</span><br><span class="line"></span><br><span class="line">           &amp;remote,<span class="keyword">sizeof</span>(remote))==SOCKET_ERROR)</span><br><span class="line">　　&#123;</span><br><span class="line">　　　<span class="built_in">printf</span>(<span class="string">"sendto failed with: %d\n"</span>,WSAGetLastError());</span><br><span class="line">　　　closesocket(sockM);</span><br><span class="line">　　　closesocket(sock);</span><br><span class="line">　　　WSACleanup();</span><br><span class="line">　　　<span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">　　&#125;</span><br><span class="line">　　<span class="keyword">if</span>(<span class="built_in">strcmp</span>(sendbuf,<span class="string">"QUIT"</span>)==<span class="number">0</span>) <span class="keyword">break</span>;</span><br><span class="line">　　Sleep(<span class="number">500</span>);</span><br><span class="line">　&#125;</span><br><span class="line"></span><br><span class="line">　closesocket(sockM);</span><br><span class="line">　closesocket(sock);</span><br><span class="line">　WSACleanup();</span><br><span class="line">　<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="四、小结"><a href="#四、小结" class="headerlink" title="四、小结"></a>四、小结</h2><p>本实例对IP多播通信进行了探讨，实例程序由Sender和Receiver两部分组成，Sender用户从控制台上输入多播发送数据，Receiver端都要求加入同一个多播组，完成接收Sender发送的多播数据。</p>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/自发现/" rel="tag"># 自发现</a>
+          
+            <a href="/tags/多播/" rel="tag"># 多播</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2015/10/20/sqlite3-insert-perform-test/" rel="next" title="Sqlite3常用的插入方法及性能测试">
+                <i class="fa fa-chevron-left"></i> Sqlite3常用的插入方法及性能测试
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2016/01/18/sort-algorithm/" rel="prev" title="简单排序算法实现">
+                简单排序算法实现 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image" src="/images/myself.jpg" alt="roy liu">
+          <p class="site-author-name" itemprop="name">roy liu</p>
+           
+              <p class="site-description motion-element" itemprop="description">keep your dream alive</p>
+          
+        </div>
+        <nav class="site-state motion-element">
+
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives/">
+                <span class="site-state-item-count">29</span>
+                <span class="site-state-item-name">日志</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-categories">
+              <a href="/categories/index.html">
+                <span class="site-state-item-count">15</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-tags">
+              <a href="/tags/index.html">
+                <span class="site-state-item-count">34</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+        </div>
+
+        
+        
+
+        
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#一、实现方法"><span class="nav-number">1.</span> <span class="nav-text">一、实现方法</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1、协议支持"><span class="nav-number">1.1.</span> <span class="nav-text">1、协议支持</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2、多播地址"><span class="nav-number">1.2.</span> <span class="nav-text">2、多播地址</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3、多播路由器"><span class="nav-number">1.3.</span> <span class="nav-text">3、多播路由器</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4、库支持"><span class="nav-number">1.4.</span> <span class="nav-text">4、库支持</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#二、编程步骤"><span class="nav-number">2.</span> <span class="nav-text">二、编程步骤</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1、启动Visual-C-6-0，创建一个控制台项目工程MultiCase。在此项目工程中添加Sender和Receiver两个项目。"><span class="nav-number">2.1.</span> <span class="nav-text">1、启动Visual C++6.0，创建一个控制台项目工程MultiCase。在此项目工程中添加Sender和Receiver两个项目。</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2、Sender实现步骤："><span class="nav-number">2.2.</span> <span class="nav-text">2、Sender实现步骤：</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3、编译两个项目，在局域网中按如下步骤测试："><span class="nav-number">2.3.</span> <span class="nav-text">3、编译两个项目，在局域网中按如下步骤测试：</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#三、程序代码"><span class="nav-number">3.</span> <span class="nav-text">三、程序代码</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Receiver-c程序代码"><span class="nav-number">3.1.</span> <span class="nav-text">Receiver.c程序代码</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Sender-c程序代码"><span class="nav-number">3.2.</span> <span class="nav-text">Sender.c程序代码</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#四、小结"><span class="nav-number">4.</span> <span class="nav-text">四、小结</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">roy liu</span>
+</div>
+
+
+<div class="powered-by">
+  由 <a class="theme-link" href="https://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Pisces
+  </a>
+</div>
+
+
+        
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.1"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.1"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.1"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.1"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.1"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.1"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.1"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
