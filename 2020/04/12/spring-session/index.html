@@ -1,0 +1,823 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.1" rel="stylesheet" type="text/css">
+
+
+  <meta name="keywords" content="spring-session,">
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.1">
+
+
+
+
+
+
+<meta name="description" content="[TOC] 目的学习一下spring-session中包含的一些设计，理解其设计思想，其次是了解内部源码，逻辑。 工程结构 来自spring-session的思考首先思考一下spring-session要解决什么问题，其次达到什么样的设计要求，我们首先来正向推导，然后在结合代码逆向推导，他达到了一些什么要求">
+<meta name="keywords" content="spring-session">
+<meta property="og:type" content="article">
+<meta property="og:title" content="spring-session设计解密">
+<meta property="og:url" content="http://yoursite.com/2020/04/12/spring-session/index.html">
+<meta property="og:site_name" content="freedom">
+<meta property="og:description" content="[TOC] 目的学习一下spring-session中包含的一些设计，理解其设计思想，其次是了解内部源码，逻辑。 工程结构 来自spring-session的思考首先思考一下spring-session要解决什么问题，其次达到什么样的设计要求，我们首先来正向推导，然后在结合代码逆向推导，他达到了一些什么要求">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="http://roy-markdown.oss-cn-qingdao.aliyuncs.com/spring-session-design/1.png">
+<meta property="og:image" content="http://roy-markdown.oss-cn-qingdao.aliyuncs.com/spring-session-design/6.jpg">
+<meta property="og:image" content="http://roy-markdown.oss-cn-qingdao.aliyuncs.com/spring-session-design/2.png">
+<meta property="og:updated_time" content="2020-04-11T09:36:35.231Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="spring-session设计解密">
+<meta name="twitter:description" content="[TOC] 目的学习一下spring-session中包含的一些设计，理解其设计思想，其次是了解内部源码，逻辑。 工程结构 来自spring-session的思考首先思考一下spring-session要解决什么问题，其次达到什么样的设计要求，我们首先来正向推导，然后在结合代码逆向推导，他达到了一些什么要求">
+<meta name="twitter:image" content="http://roy-markdown.oss-cn-qingdao.aliyuncs.com/spring-session-design/1.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    sidebar: {"position":"left","display":"post","offset":12,"offset_float":0,"b2t":false,"scrollpercent":false},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2020/04/12/spring-session/">
+
+
+
+
+
+  <title>spring-session设计解密 | freedom</title>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">freedom</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">Coding changes the world</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br>
+            
+            关于
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-commonweal">
+          <a href="/404.html" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-heartbeat"></i> <br>
+            
+            公益404
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/04/12/spring-session/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="roy liu">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/myself.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="freedom">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">spring-session设计解密</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2020-04-12T15:47:44+08:00">
+                2020-04-12
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/spring-session/" itemprop="url" rel="index">
+                    <span itemprop="name">spring-session</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>[TOC]</p>
+<h2 id="目的"><a href="#目的" class="headerlink" title="目的"></a>目的</h2><p>学习一下spring-session中包含的一些设计，理解其设计思想，其次是了解内部源码，逻辑。</p>
+<h2 id="工程结构"><a href="#工程结构" class="headerlink" title="工程结构"></a>工程结构</h2><p><img src="http://roy-markdown.oss-cn-qingdao.aliyuncs.com/spring-session-design/1.png" width="400" height="400" div align="right"></p>
+<h2 id="来自spring-session的思考"><a href="#来自spring-session的思考" class="headerlink" title="来自spring-session的思考"></a>来自spring-session的思考</h2><p>首先思考一下spring-session要解决什么问题，其次达到什么样的设计要求，<br>我们首先来正向推导，然后在结合代码逆向推导，他达到了一些什么要求</p>
+<a id="more"></a>
+<h3 id="基本要求"><a href="#基本要求" class="headerlink" title="基本要求"></a>基本要求</h3><ul>
+<li>原业务无感知（重要）</li>
+<li>支持多种存储介质</li>
+<li>支持多种servlet容器（重要）</li>
+<li>性能</li>
+<li>稳定性、可靠性</li>
+</ul>
+<p>要想做到第1、3条，基本限定必须要基于标准servlet协议 </p>
+<h2 id="基础知识"><a href="#基础知识" class="headerlink" title="基础知识"></a>基础知识</h2><p>HttpSession (javax.servlet.http) 接口</p>
+<p>Session (Spring-Session 接口)  MapSession RedisSession JdbcSession</p>
+<p>ServletRequest-&gt;HttpServletRequest (javax.servlet;)</p>
+<p>ServletRequestWrapper(类)-&gt;HttpServletRequestWrapper(类)(javax.servlet;)</p>
+<p>SessionRepository(Spring Session接口) 一个管理Session实例的仓库</p>
+<p>SessionRepositoryFilter（将spring-session 里面的Session转换 Httpsession 的实现）</p>
+<p>SessionRepositoryRequestWrapper、SessionRepositoryResponseWrapper (spring-session)</p>
+<p><img src="http://roy-markdown.oss-cn-qingdao.aliyuncs.com/spring-session-design/6.jpg" width="1200" height="400" div align="right"></p>
+<p>2种设计模式</p>
+<ul>
+<li>适配器模式</li>
+<li>包装着模式</li>
+</ul>
+<p>思考 为什么要用适配器模式？spring为什么要另起一个Session的接口</p>
+<p>1、通过调整HttpSessionAdapter 就可以屏蔽两种接口之间的差异<br>2、不仅仅能支持和满足servlet规范，还能方便扩展其他规范</p>
+<h2 id="关键类"><a href="#关键类" class="headerlink" title="关键类"></a>关键类</h2><table>
+<thead>
+<tr>
+<th>spring-session-core</th>
+<th>spring-session-data-redis</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>SessionRepositoryFilter</td>
+<td></td>
+</tr>
+<tr>
+<td>Session</td>
+<td>RedisSession RedisOperationsSessionRepositoryn内部类</td>
+</tr>
+<tr>
+<td>SessionRepository</td>
+<td>RedisOperationsSessionRepository</td>
+</tr>
+<tr>
+<td>SpringHttpSessionConfiguration</td>
+<td>RedisHttpSessionConfiguration</td>
+</tr>
+</tbody>
+</table>
+<p>各个主要配置类作用</p>
+<p>@EnableRedisHttpSession位于spring-session-data-redis module 中<br>并@Import RedisHttpSessionConfiguration.class<br>RedisHttpSessionConfiguration继承spring-session-core中的SpringHttpSessionConfiguration<br>其中SpringHttpSessionConfiguration只关注filter,cookie解析，sessionId解析<br>RedisHttpSessionConfiguration 主要作用构建SessionRepository （创建redis 序列化， redis连接工厂，命名空间，缓存有效期）<br>redisMessageListenerContainer 缓存的一些监听器</p>
+<h2 id="整体架构"><a href="#整体架构" class="headerlink" title="整体架构"></a>整体架构</h2><p><img src="http://roy-markdown.oss-cn-qingdao.aliyuncs.com/spring-session-design/2.png" width="800" height="400" div align="right/"></p>
+<h2 id="获取session"><a href="#获取session" class="headerlink" title="获取session"></a>获取session</h2><p>SessionRepositoryRequestWrapper getSession<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> HttpSessionWrapper <span class="title">getSession</span><span class="params">(<span class="keyword">boolean</span> create)</span> </span>&#123;</span><br><span class="line">     	<span class="comment">//先获取request上下文中的，为什么，因为一次请求可能在业务层已经多次获取了</span></span><br><span class="line">     	<span class="comment">//先放在本地request的ConcurrentHashMap中，不必每次去redis取</span></span><br><span class="line">		HttpSessionWrapper currentSession = getCurrentSession();</span><br><span class="line">		<span class="keyword">if</span> (currentSession != <span class="keyword">null</span>) &#123;</span><br><span class="line">			<span class="keyword">return</span> currentSession;</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="comment">//假如请求已经返回，第二次来请求，就获取当前request的sessionId</span></span><br><span class="line">       <span class="comment">//从sessionRepository 拿出session </span></span><br><span class="line">       <span class="comment">// 两种情况，一是拿到了，二是没拿到</span></span><br><span class="line">       <span class="comment">// 拿到了 就把放入当前request的ConcurrentHashMap 这里面涉及多线程</span></span><br><span class="line">       <span class="comment">// 没拿到，说明session过期，或者非法的sessionId</span></span><br><span class="line">		S requestedSession = getRequestedSession();</span><br><span class="line">		<span class="keyword">if</span> (requestedSession != <span class="keyword">null</span>) &#123;</span><br><span class="line">			<span class="keyword">if</span> (getAttribute(INVALID_SESSION_ID_ATTR) == <span class="keyword">null</span>) &#123;</span><br><span class="line">				requestedSession.setLastAccessedTime(Instant.now());</span><br><span class="line">				<span class="keyword">this</span>.requestedSessionIdValid = <span class="keyword">true</span>;</span><br><span class="line">				currentSession = <span class="keyword">new</span> HttpSessionWrapper(requestedSession, getServletContext());</span><br><span class="line">				currentSession.setNew(<span class="keyword">false</span>);</span><br><span class="line">				setCurrentSession(currentSession);</span><br><span class="line">				<span class="keyword">return</span> currentSession;</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">else</span> &#123;</span><br><span class="line">			<span class="comment">// This is an invalid session id. No need to ask again if</span></span><br><span class="line">			<span class="comment">// request.getSession is invoked for the duration of this request</span></span><br><span class="line">			<span class="keyword">if</span> (SESSION_LOGGER.isDebugEnabled()) &#123;</span><br><span class="line">				SESSION_LOGGER.debug(</span><br><span class="line">						<span class="string">"No session found by id: Caching result for getSession(false) for this HttpServletRequest."</span>);</span><br><span class="line">			&#125;</span><br><span class="line">			setAttribute(INVALID_SESSION_ID_ATTR, <span class="string">"true"</span>);</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">if</span> (!create) &#123;</span><br><span class="line">			<span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">if</span> (SESSION_LOGGER.isDebugEnabled()) &#123;</span><br><span class="line">			SESSION_LOGGER.debug(</span><br><span class="line">					<span class="string">"A new session was created. To help you troubleshoot where the session was created we provided a StackTrace (this is not an error). You can prevent this from appearing by disabling DEBUG logging for "</span></span><br><span class="line">							+ SESSION_LOGGER_NAME,</span><br><span class="line">					<span class="keyword">new</span> RuntimeException(</span><br><span class="line">							<span class="string">"For debugging purposes only (not an error)"</span>));</span><br><span class="line">		&#125;</span><br><span class="line">		S session = SessionRepositoryFilter.<span class="keyword">this</span>.sessionRepository.createSession();</span><br><span class="line">		session.setLastAccessedTime(Instant.now());</span><br><span class="line">		currentSession = <span class="keyword">new</span> HttpSessionWrapper(session, getServletContext());</span><br><span class="line">		setCurrentSession(currentSession);</span><br><span class="line">		<span class="keyword">return</span> currentSession;</span><br><span class="line">	&#125;</span><br></pre></td></tr></table></figure></p>
+<h2 id="session创建"><a href="#session创建" class="headerlink" title="session创建"></a>session创建</h2><p>RedisOperationSessionsRepository.java<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> RedisSession <span class="title">createSession</span><span class="params">()</span> </span>&#123;</span><br><span class="line">	Duration maxInactiveInterval = Duration</span><br><span class="line">			.ofSeconds((<span class="keyword">this</span>.defaultMaxInactiveInterval != <span class="keyword">null</span>)</span><br><span class="line">					? <span class="keyword">this</span>.defaultMaxInactiveInterval</span><br><span class="line">					: MapSession.DEFAULT_MAX_INACTIVE_INTERVAL_SECONDS);</span><br><span class="line">	RedisSession session = <span class="keyword">new</span> RedisSession(maxInactiveInterval);</span><br><span class="line">	<span class="comment">//看配置是否立即提交到session</span></span><br><span class="line">	session.flushImmediateIfNecessary();</span><br><span class="line">	<span class="keyword">return</span> session;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h2 id="session提交"><a href="#session提交" class="headerlink" title="session提交"></a>session提交</h2><p>session提交一共干了如下几件事</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">* HMSET spring:session:sessions:<span class="number">33f</span>dd1b6-b496-<span class="number">4</span>b33-<span class="number">9f</span>7d-df96679d32fe creationTime <span class="number">1404360000000</span> maxInactiveInterval <span class="number">1800</span> lastAccessedTime <span class="number">1404360000000</span> sessionAttr:attrName someAttrValue sessionAttr2:attrName someAttrValue2</span><br><span class="line">* EXPIRE spring:session:sessions:<span class="number">33f</span>dd1b6-b496-<span class="number">4</span>b33-<span class="number">9f</span>7d-df96679d32fe <span class="number">2100</span></span><br><span class="line">* APPEND spring:session:sessions:expires:<span class="number">33f</span>dd1b6-b496-<span class="number">4</span>b33-<span class="number">9f</span>7d-df96679d32fe <span class="string">""</span></span><br><span class="line">* EXPIRE spring:session:sessions:expires:<span class="number">33f</span>dd1b6-b496-<span class="number">4</span>b33-<span class="number">9f</span>7d-df96679d32fe <span class="number">1800</span></span><br><span class="line">* SADD spring:session:expirations:<span class="number">1439245080000</span> expires:<span class="number">33f</span>dd1b6-b496-<span class="number">4</span>b33-<span class="number">9f</span>7d-df96679d32fe</span><br><span class="line">* EXPIRE spring:session:expirations1439245080000 <span class="number">2100</span></span><br></pre></td></tr></table></figure>
+<p> RedisOperationsSessionRepository.java<br> <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br></pre></td><td class="code"><pre><span class="line">      <span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">save</span><span class="params">()</span> </span>&#123;</span><br><span class="line">          <span class="comment">//servlet3.1规范，防止会话固定攻击</span></span><br><span class="line">	saveChangeSessionId();</span><br><span class="line">	saveDelta();</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * Saves any attributes that have been changed and updates the expiration of this</span></span><br><span class="line"><span class="comment"> * session.</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">saveDelta</span><span class="params">()</span> </span>&#123;</span><br><span class="line">	<span class="keyword">if</span> (<span class="keyword">this</span>.delta.isEmpty()) &#123;</span><br><span class="line">		<span class="keyword">return</span>;</span><br><span class="line">	&#125;</span><br><span class="line">	String sessionId = getId();</span><br><span class="line">	<span class="comment">//持久化session属性</span></span><br><span class="line">	getSessionBoundHashOperations(sessionId).putAll(<span class="keyword">this</span>.delta);</span><br><span class="line">	String principalSessionKey = getSessionAttrNameKey(</span><br><span class="line">			FindByIndexNameSessionRepository.PRINCIPAL_NAME_INDEX_NAME);</span><br><span class="line">	String securityPrincipalSessionKey = getSessionAttrNameKey(</span><br><span class="line">			SPRING_SECURITY_CONTEXT);</span><br><span class="line">          <span class="comment">//和具体的登录或者安全框架有关，此处只考虑了spring_security_context的</span></span><br><span class="line">	<span class="keyword">if</span> (<span class="keyword">this</span>.delta.containsKey(principalSessionKey)</span><br><span class="line">			|| <span class="keyword">this</span>.delta.containsKey(securityPrincipalSessionKey)) &#123;</span><br><span class="line">		<span class="keyword">if</span> (<span class="keyword">this</span>.originalPrincipalName != <span class="keyword">null</span>) &#123;</span><br><span class="line">			String originalPrincipalRedisKey = getPrincipalKey(</span><br><span class="line">					<span class="keyword">this</span>.originalPrincipalName);</span><br><span class="line">			RedisOperationsSessionRepository.<span class="keyword">this</span>.sessionRedisOperations</span><br><span class="line">					.boundSetOps(originalPrincipalRedisKey).remove(sessionId);</span><br><span class="line">		&#125;</span><br><span class="line">		String principal = PRINCIPAL_NAME_RESOLVER.resolvePrincipal(<span class="keyword">this</span>);</span><br><span class="line">		<span class="keyword">this</span>.originalPrincipalName = principal;</span><br><span class="line">		<span class="keyword">if</span> (principal != <span class="keyword">null</span>) &#123;</span><br><span class="line">			String principalRedisKey = getPrincipalKey(principal);</span><br><span class="line">			RedisOperationsSessionRepository.<span class="keyword">this</span>.sessionRedisOperations</span><br><span class="line">					.boundSetOps(principalRedisKey).add(sessionId);</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">          <span class="comment">//清空session属性</span></span><br><span class="line">	<span class="keyword">this</span>.delta = <span class="keyword">new</span> HashMap&lt;&gt;(<span class="keyword">this</span>.delta.size());</span><br><span class="line"></span><br><span class="line">          <span class="comment">//更新即将过期时间</span></span><br><span class="line">	Long originalExpiration = (<span class="keyword">this</span>.originalLastAccessTime != <span class="keyword">null</span>)</span><br><span class="line">			? <span class="keyword">this</span>.originalLastAccessTime.plus(getMaxInactiveInterval())</span><br><span class="line">					.toEpochMilli()</span><br><span class="line">			: <span class="keyword">null</span>;</span><br><span class="line">	RedisOperationsSessionRepository.<span class="keyword">this</span>.expirationPolicy</span><br><span class="line">			.onExpirationUpdated(originalExpiration, <span class="keyword">this</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">saveChangeSessionId</span><span class="params">()</span> </span>&#123;</span><br><span class="line">	String sessionId = getId();</span><br><span class="line">	<span class="comment">//判断是否变换了sessionId</span></span><br><span class="line">	<span class="keyword">if</span> (sessionId.equals(<span class="keyword">this</span>.originalSessionId)) &#123;</span><br><span class="line">		<span class="keyword">return</span>;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="comment">//并且不是新的session，需要更改原来sessionId的值</span></span><br><span class="line">	<span class="keyword">if</span> (!isNew()) &#123;</span><br><span class="line">		String originalSessionIdKey = getSessionKey(<span class="keyword">this</span>.originalSessionId);</span><br><span class="line">		String sessionIdKey = getSessionKey(sessionId);</span><br><span class="line">		<span class="comment">//更改主session的key值</span></span><br><span class="line">		<span class="keyword">try</span> &#123;</span><br><span class="line">			RedisOperationsSessionRepository.<span class="keyword">this</span>.sessionRedisOperations</span><br><span class="line">					.rename(originalSessionIdKey, sessionIdKey);</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">catch</span> (NonTransientDataAccessException ex) &#123;</span><br><span class="line">			handleErrNoSuchKeyError(ex);</span><br><span class="line">		&#125;</span><br><span class="line">		String originalExpiredKey = getExpiredKey(<span class="keyword">this</span>.originalSessionId);</span><br><span class="line">		String expiredKey = getExpiredKey(sessionId);</span><br><span class="line">		<span class="keyword">try</span> &#123;</span><br><span class="line">		<span class="comment">//更改过期session键 sessionId的值</span></span><br><span class="line">			RedisOperationsSessionRepository.<span class="keyword">this</span>.sessionRedisOperations</span><br><span class="line">					.rename(originalExpiredKey, expiredKey);</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">catch</span> (NonTransientDataAccessException ex) &#123;</span><br><span class="line">			handleErrNoSuchKeyError(ex);</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">this</span>.originalSessionId = sessionId;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>为何要这样设计呢<br>假设一下 </p>
+<ul>
+<li>解决过期Session不能被及时清除的问题 （定时任务每隔一个钟去访问redis，触发清除）</li>
+<li>为了不遍历全空间数据，将一分钟过期的数据放到同一个set下面，每分钟的定时任务只去清除这个set下的数据</li>
+<li>即使数据过期，也不要立即删除当前,还有过期的事件处理</li>
+</ul>
+<h2 id="session过期"><a href="#session过期" class="headerlink" title="session过期"></a>session过期</h2><p>需要监听session过期事件，并且进行触发</p>
+<p>RedisHttpSessionConfiguration.java</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">   <span class="comment">//定时任务扫描</span></span><br><span class="line">   <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">configureTasks</span><span class="params">(ScheduledTaskRegistrar taskRegistrar)</span> </span>&#123;</span><br><span class="line">	taskRegistrar.addCronTask(() -&gt; sessionRepository().cleanupExpiredSessions(),</span><br><span class="line">			<span class="keyword">this</span>.cleanupCron);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">cleanExpiredSessions</span><span class="params">()</span> </span>&#123;</span><br><span class="line">		<span class="keyword">long</span> now = System.currentTimeMillis();</span><br><span class="line">		<span class="keyword">long</span> prevMin = roundDownMinute(now);</span><br><span class="line"></span><br><span class="line">		<span class="keyword">if</span> (logger.isDebugEnabled()) &#123;</span><br><span class="line">			logger.debug(<span class="string">"Cleaning up sessions expiring at "</span> + <span class="keyword">new</span> Date(prevMin));</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">        <span class="comment">//获取过期key</span></span><br><span class="line">        <span class="comment">//spring:session:expirations:1439245080000</span></span><br><span class="line">		String expirationKey = getExpirationKey(prevMin);</span><br><span class="line"></span><br><span class="line">		<span class="comment">//expires:33fdd1b6-b496-4b33-9f7d-df96679d32fe</span></span><br><span class="line">		Set&lt;Object&gt; sessionsToExpire = <span class="keyword">this</span>.redis.boundSetOps(expirationKey).members();</span><br><span class="line">		<span class="keyword">this</span>.redis.delete(expirationKey);</span><br><span class="line">		<span class="comment">//分别touch过期key</span></span><br><span class="line">	</span><br><span class="line">		<span class="keyword">for</span> (Object session : sessionsToExpire) &#123;</span><br><span class="line">		<span class="comment">//	spring:session:expires:33fdd1b6-b496-4b33-9f7d-df96679d32fe</span></span><br><span class="line">			String sessionKey = getSessionKey((String) session);</span><br><span class="line">			<span class="comment">//触发删除，过期事件</span></span><br><span class="line">			touch(sessionKey);</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br></pre></td></tr></table></figure>
+<p>RedisOperationsSessionRepository.java<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onMessage</span><span class="params">(Message message, <span class="keyword">byte</span>[] pattern)</span> </span>&#123;</span><br><span class="line">		<span class="keyword">byte</span>[] messageChannel = message.getChannel();</span><br><span class="line">		<span class="keyword">byte</span>[] messageBody = message.getBody();</span><br><span class="line"></span><br><span class="line">		String channel = <span class="keyword">new</span> String(messageChannel);</span><br><span class="line"></span><br><span class="line">		<span class="keyword">if</span> (channel.startsWith(<span class="keyword">this</span>.sessionCreatedChannelPrefix)) &#123;</span><br><span class="line">			<span class="comment">// <span class="doctag">TODO:</span> is this thread safe?</span></span><br><span class="line">			Map&lt;Object, Object&gt; loaded = (Map&lt;Object, Object&gt;) <span class="keyword">this</span>.defaultSerializer</span><br><span class="line">					.deserialize(message.getBody());</span><br><span class="line">			handleCreated(loaded, channel);</span><br><span class="line">			<span class="keyword">return</span>;</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		String body = <span class="keyword">new</span> String(messageBody);</span><br><span class="line">		<span class="keyword">if</span> (!body.startsWith(getExpiredKeyPrefix())) &#123;</span><br><span class="line">			<span class="keyword">return</span>;</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		<span class="keyword">boolean</span> isDeleted = channel.equals(<span class="keyword">this</span>.sessionDeletedChannel);</span><br><span class="line">		<span class="keyword">if</span> (isDeleted || channel.equals(<span class="keyword">this</span>.sessionExpiredChannel)) &#123;</span><br><span class="line">			<span class="keyword">int</span> beginIndex = body.lastIndexOf(<span class="string">":"</span>) + <span class="number">1</span>;</span><br><span class="line">			<span class="keyword">int</span> endIndex = body.length();</span><br><span class="line">			String sessionId = body.substring(beginIndex, endIndex);</span><br><span class="line"></span><br><span class="line">            <span class="comment">//还是能取到session的 因为过期时间晚了5分钟,而且删除的是</span></span><br><span class="line">            <span class="comment">//spring:session:expires:33fdd1b6-b496-4b33-9f7d-df96679d32fe</span></span><br><span class="line">			RedisSession session = getSession(sessionId, <span class="keyword">true</span>);</span><br><span class="line"></span><br><span class="line">			<span class="keyword">if</span> (session == <span class="keyword">null</span>) &#123;</span><br><span class="line">				logger.warn(<span class="string">"Unable to publish SessionDestroyedEvent for session "</span></span><br><span class="line">						+ sessionId);</span><br><span class="line">				<span class="keyword">return</span>;</span><br><span class="line">			&#125;</span><br><span class="line"></span><br><span class="line">			<span class="keyword">if</span> (logger.isDebugEnabled()) &#123;</span><br><span class="line">				logger.debug(<span class="string">"Publishing SessionDestroyedEvent for session "</span> + sessionId);</span><br><span class="line">			&#125;</span><br><span class="line"></span><br><span class="line">			cleanupPrincipalIndex(session);</span><br><span class="line"></span><br><span class="line">			<span class="keyword">if</span> (isDeleted) &#123;</span><br><span class="line">			    <span class="comment">// 给一些session事件监听器处理</span></span><br><span class="line">				handleDeleted(session);</span><br><span class="line">			&#125;</span><br><span class="line">			<span class="keyword">else</span> &#123;</span><br><span class="line">				handleExpired(session);</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">cleanupPrincipalIndex</span><span class="params">(RedisSession session)</span> </span>&#123;</span><br><span class="line">		String sessionId = session.getId();</span><br><span class="line">		String principal = PRINCIPAL_NAME_RESOLVER.resolvePrincipal(session);</span><br><span class="line">		<span class="keyword">if</span> (principal != <span class="keyword">null</span>) &#123;</span><br><span class="line">			<span class="keyword">this</span>.sessionRedisOperations.boundSetOps(getPrincipalKey(principal))</span><br><span class="line">					.remove(sessionId);</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">handleCreated</span><span class="params">(Map&lt;Object, Object&gt; loaded, String channel)</span> </span>&#123;</span><br><span class="line">		String id = channel.substring(channel.lastIndexOf(<span class="string">":"</span>) + <span class="number">1</span>);</span><br><span class="line">		Session session = loadSession(id, loaded);</span><br><span class="line">		publishEvent(<span class="keyword">new</span> SessionCreatedEvent(<span class="keyword">this</span>, session));</span><br><span class="line">	&#125;</span><br></pre></td></tr></table></figure></p>
+<h2 id="参考文献"><a href="#参考文献" class="headerlink" title="参考文献"></a>参考文献</h2><p><a href="https://github.com/spring-projects/spring-session/issues/92" target="_blank" rel="noopener">https://github.com/spring-projects/spring-session/issues/92</a></p>
+<p><a href="https://github.com/spring-projects/spring-session/issues/93" target="_blank" rel="noopener">https://github.com/spring-projects/spring-session/issues/93</a></p>
+<p><a href="https://www.cnblogs.com/lxyit/p/9672097.html" target="_blank" rel="noopener">https://www.cnblogs.com/lxyit/p/9672097.html</a></p>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/spring-session/" rel="tag"># spring-session</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2018/12/03/rabbitmq-base-concept/" rel="next" title="RabbitMq核心概念和术语">
+                <i class="fa fa-chevron-left"></i> RabbitMq核心概念和术语
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image" src="/images/myself.jpg" alt="roy liu">
+          <p class="site-author-name" itemprop="name">roy liu</p>
+           
+              <p class="site-description motion-element" itemprop="description">keep your dream alive</p>
+          
+        </div>
+        <nav class="site-state motion-element">
+
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives/">
+                <span class="site-state-item-count">30</span>
+                <span class="site-state-item-name">日志</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-categories">
+              <a href="/categories/index.html">
+                <span class="site-state-item-count">16</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-tags">
+              <a href="/tags/index.html">
+                <span class="site-state-item-count">35</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+        </div>
+
+        
+        
+
+        
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#目的"><span class="nav-number">1.</span> <span class="nav-text">目的</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#工程结构"><span class="nav-number">2.</span> <span class="nav-text">工程结构</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#来自spring-session的思考"><span class="nav-number">3.</span> <span class="nav-text">来自spring-session的思考</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#基本要求"><span class="nav-number">3.1.</span> <span class="nav-text">基本要求</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#基础知识"><span class="nav-number">4.</span> <span class="nav-text">基础知识</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#关键类"><span class="nav-number">5.</span> <span class="nav-text">关键类</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#整体架构"><span class="nav-number">6.</span> <span class="nav-text">整体架构</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#获取session"><span class="nav-number">7.</span> <span class="nav-text">获取session</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#session创建"><span class="nav-number">8.</span> <span class="nav-text">session创建</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#session提交"><span class="nav-number">9.</span> <span class="nav-text">session提交</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#session过期"><span class="nav-number">10.</span> <span class="nav-text">session过期</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考文献"><span class="nav-number">11.</span> <span class="nav-text">参考文献</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">roy liu</span>
+</div>
+
+
+<div class="powered-by">
+  由 <a class="theme-link" href="https://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Pisces
+  </a>
+</div>
+
+
+        
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.1"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.1"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.1"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.1"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.1"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.1"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.1"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
